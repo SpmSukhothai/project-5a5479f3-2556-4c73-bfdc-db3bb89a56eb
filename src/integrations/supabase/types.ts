@@ -14,16 +14,347 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          record_id: string | null
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          record_id?: string | null
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          record_id?: string | null
+          table_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      children: {
+        Row: {
+          birth_date: string
+          child_name: string
+          created_at: string
+          guardian_id: string
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          birth_date: string
+          child_name: string
+          created_at?: string
+          guardian_id: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          birth_date?: string
+          child_name?: string
+          created_at?: string
+          guardian_id?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "children_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "guardians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guardians: {
+        Row: {
+          created_at: string
+          employee_code: string
+          first_name: string
+          id: string
+          last_name: string
+          national_id: string | null
+          phone: string | null
+          position: string | null
+          prefix: string
+          school_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          employee_code: string
+          first_name: string
+          id?: string
+          last_name: string
+          national_id?: string | null
+          phone?: string | null
+          position?: string | null
+          prefix: string
+          school_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          employee_code?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          national_id?: string | null
+          phone?: string | null
+          position?: string | null
+          prefix?: string
+          school_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guardians_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      reimbursement_rates: {
+        Row: {
+          academic_year: number
+          created_at: string
+          education_level: Database["public"]["Enums"]["education_level"]
+          id: string
+          max_amount: number
+          school_type: Database["public"]["Enums"]["school_type"]
+        }
+        Insert: {
+          academic_year?: number
+          created_at?: string
+          education_level: Database["public"]["Enums"]["education_level"]
+          id?: string
+          max_amount: number
+          school_type: Database["public"]["Enums"]["school_type"]
+        }
+        Update: {
+          academic_year?: number
+          created_at?: string
+          education_level?: Database["public"]["Enums"]["education_level"]
+          id?: string
+          max_amount?: number
+          school_type?: Database["public"]["Enums"]["school_type"]
+        }
+        Relationships: []
+      }
+      reimbursements: {
+        Row: {
+          academic_year: number
+          child_id: string
+          created_at: string
+          created_by: string | null
+          education_level: Database["public"]["Enums"]["education_level"]
+          entitled_amount: number
+          guardian_id: string
+          id: string
+          registration_no: string
+          remark: string | null
+          school_id: string | null
+          school_type: Database["public"]["Enums"]["school_type"]
+          sem1_amount: number
+          sem1_doc_no: string | null
+          sem1_pay_date: string | null
+          sem1_receipt_date: string | null
+          sem1_receipt_no: string | null
+          sem2_amount: number
+          sem2_doc_no: string | null
+          sem2_pay_date: string | null
+          sem2_receipt_date: string | null
+          sem2_receipt_no: string | null
+          updated_at: string
+        }
+        Insert: {
+          academic_year: number
+          child_id: string
+          created_at?: string
+          created_by?: string | null
+          education_level: Database["public"]["Enums"]["education_level"]
+          entitled_amount?: number
+          guardian_id: string
+          id?: string
+          registration_no: string
+          remark?: string | null
+          school_id?: string | null
+          school_type: Database["public"]["Enums"]["school_type"]
+          sem1_amount?: number
+          sem1_doc_no?: string | null
+          sem1_pay_date?: string | null
+          sem1_receipt_date?: string | null
+          sem1_receipt_no?: string | null
+          sem2_amount?: number
+          sem2_doc_no?: string | null
+          sem2_pay_date?: string | null
+          sem2_receipt_date?: string | null
+          sem2_receipt_no?: string | null
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: number
+          child_id?: string
+          created_at?: string
+          created_by?: string | null
+          education_level?: Database["public"]["Enums"]["education_level"]
+          entitled_amount?: number
+          guardian_id?: string
+          id?: string
+          registration_no?: string
+          remark?: string | null
+          school_id?: string | null
+          school_type?: Database["public"]["Enums"]["school_type"]
+          sem1_amount?: number
+          sem1_doc_no?: string | null
+          sem1_pay_date?: string | null
+          sem1_receipt_date?: string | null
+          sem1_receipt_no?: string | null
+          sem2_amount?: number
+          sem2_doc_no?: string | null
+          sem2_pay_date?: string | null
+          sem2_receipt_date?: string | null
+          sem2_receipt_no?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reimbursements_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reimbursements_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "guardians"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reimbursements_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schools: {
+        Row: {
+          created_at: string
+          id: string
+          province: string | null
+          school_code: string
+          school_name: string
+          school_type: Database["public"]["Enums"]["school_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          province?: string | null
+          school_code: string
+          school_name: string
+          school_type?: Database["public"]["Enums"]["school_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          province?: string | null
+          school_code?: string
+          school_name?: string
+          school_type?: Database["public"]["Enums"]["school_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "finance"
+      education_level:
+        | "kindergarten"
+        | "primary"
+        | "lower_secondary"
+        | "upper_secondary"
+        | "vocational"
+        | "bachelor"
+      school_type: "government" | "private"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +481,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "finance"],
+      education_level: [
+        "kindergarten",
+        "primary",
+        "lower_secondary",
+        "upper_secondary",
+        "vocational",
+        "bachelor",
+      ],
+      school_type: ["government", "private"],
+    },
   },
 } as const
