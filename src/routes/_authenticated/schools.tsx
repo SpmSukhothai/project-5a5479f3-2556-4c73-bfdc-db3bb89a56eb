@@ -21,7 +21,7 @@ function SchoolsPage() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState({ school_code: "", school_name: "", school_type: "government", province: "สุโขทัย" });
+  const [form, setForm] = useState<{ school_code: string; school_name: string; school_type: "government" | "private"; province: string }>({ school_code: "", school_name: "", school_type: "government", province: "สุโขทัย" });
 
   const { data: schools = [] } = useQuery({
     queryKey: ["schools"],
@@ -115,7 +115,7 @@ function SchoolsPage() {
             <div><Label>ชื่อโรงเรียน</Label><Input value={form.school_name} onChange={(e) => setForm({ ...form, school_name: e.target.value })} /></div>
             <div>
               <Label>ประเภท</Label>
-              <Select value={form.school_type} onValueChange={(v) => setForm({ ...form, school_type: v })}>
+              <Select value={form.school_type} onValueChange={(v) => setForm({ ...form, school_type: v as "government" | "private" })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="government">ราชการ</SelectItem>
