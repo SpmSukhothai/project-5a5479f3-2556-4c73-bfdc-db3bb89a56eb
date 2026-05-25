@@ -12,7 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSchoolsRouteImport } from './routes/_authenticated/schools'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedReimbursementsRouteImport } from './routes/_authenticated/reimbursements'
 import { Route as AuthenticatedGuardiansRouteImport } from './routes/_authenticated/guardians'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedChildrenRouteImport } from './routes/_authenticated/children'
@@ -31,11 +34,27 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedSchoolsRoute = AuthenticatedSchoolsRouteImport.update({
   id: '/schools',
   path: '/schools',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedReimbursementsRoute =
+  AuthenticatedReimbursementsRouteImport.update({
+    id: '/reimbursements',
+    path: '/reimbursements',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedGuardiansRoute = AuthenticatedGuardiansRouteImport.update({
   id: '/guardians',
   path: '/guardians',
@@ -58,7 +77,10 @@ export interface FileRoutesByFullPath {
   '/children': typeof AuthenticatedChildrenRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/guardians': typeof AuthenticatedGuardiansRoute
+  '/reimbursements': typeof AuthenticatedReimbursementsRoute
+  '/reports': typeof AuthenticatedReportsRoute
   '/schools': typeof AuthenticatedSchoolsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -66,7 +88,10 @@ export interface FileRoutesByTo {
   '/children': typeof AuthenticatedChildrenRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/guardians': typeof AuthenticatedGuardiansRoute
+  '/reimbursements': typeof AuthenticatedReimbursementsRoute
+  '/reports': typeof AuthenticatedReportsRoute
   '/schools': typeof AuthenticatedSchoolsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -76,7 +101,10 @@ export interface FileRoutesById {
   '/_authenticated/children': typeof AuthenticatedChildrenRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/guardians': typeof AuthenticatedGuardiansRoute
+  '/_authenticated/reimbursements': typeof AuthenticatedReimbursementsRoute
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/schools': typeof AuthenticatedSchoolsRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -86,9 +114,21 @@ export interface FileRouteTypes {
     | '/children'
     | '/dashboard'
     | '/guardians'
+    | '/reimbursements'
+    | '/reports'
     | '/schools'
+    | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/children' | '/dashboard' | '/guardians' | '/schools'
+  to:
+    | '/'
+    | '/login'
+    | '/children'
+    | '/dashboard'
+    | '/guardians'
+    | '/reimbursements'
+    | '/reports'
+    | '/schools'
+    | '/settings'
   id:
     | '__root__'
     | '/'
@@ -97,7 +137,10 @@ export interface FileRouteTypes {
     | '/_authenticated/children'
     | '/_authenticated/dashboard'
     | '/_authenticated/guardians'
+    | '/_authenticated/reimbursements'
+    | '/_authenticated/reports'
     | '/_authenticated/schools'
+    | '/_authenticated/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -129,11 +172,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/schools': {
       id: '/_authenticated/schools'
       path: '/schools'
       fullPath: '/schools'
       preLoaderRoute: typeof AuthenticatedSchoolsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/reimbursements': {
+      id: '/_authenticated/reimbursements'
+      path: '/reimbursements'
+      fullPath: '/reimbursements'
+      preLoaderRoute: typeof AuthenticatedReimbursementsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/guardians': {
@@ -164,14 +228,20 @@ interface AuthenticatedRouteChildren {
   AuthenticatedChildrenRoute: typeof AuthenticatedChildrenRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedGuardiansRoute: typeof AuthenticatedGuardiansRoute
+  AuthenticatedReimbursementsRoute: typeof AuthenticatedReimbursementsRoute
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSchoolsRoute: typeof AuthenticatedSchoolsRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChildrenRoute: AuthenticatedChildrenRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedGuardiansRoute: AuthenticatedGuardiansRoute,
+  AuthenticatedReimbursementsRoute: AuthenticatedReimbursementsRoute,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSchoolsRoute: AuthenticatedSchoolsRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
