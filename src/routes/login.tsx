@@ -22,6 +22,7 @@ import { useAuth } from "@/hooks/use-auth";
 export const Route = createFileRoute("/login")({ component: LoginPage });
 
 const REMEMBER_KEY = "spm_sukhothai_remember_email";
+const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{6,}$/;
 
 function PasswordField({
   value,
@@ -38,15 +39,12 @@ function PasswordField({
       <Input
         id={id}
         type={show ? "text" : "password"}
-        inputMode="numeric"
-        pattern="\d{6}"
-        maxLength={6}
         minLength={6}
         required
-        placeholder="รหัสผ่าน 6 หลัก"
+        placeholder="รหัสผ่านอย่างน้อย 6 ตัว"
         value={value}
-        onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 6))}
-        className="pr-10 tracking-[0.3em]"
+        onChange={(e) => onChange(e.target.value)}
+        className="pr-10"
       />
       <button
         type="button"
@@ -90,7 +88,7 @@ function LoginPage() {
 
   const signIn = async (e: FormEvent) => {
     e.preventDefault();
-    if (password.length !== 6) { toast.error("รหัสผ่านต้องมี 6 หลัก"); return; }
+    if (!passwordRegex.test(password)) { toast.error("รหัสผ่านต้องมีอย่างน้อย 6 ตัว และประกอบด้วยตัวหนังสือ ตัวเลข และอักขระพิเศษ"); return; }
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
@@ -102,7 +100,7 @@ function LoginPage() {
 
   const signUp = async (e: FormEvent) => {
     e.preventDefault();
-    if (password.length !== 6) { toast.error("รหัสผ่านต้องมี 6 หลัก"); return; }
+    if (!passwordRegex.test(password)) { toast.error("รหัสผ่านต้องมีอย่างน้อย 6 ตัว และประกอบด้วยตัวหนังสือ ตัวเลข และอักขระพิเศษ"); return; }
     setBusy(true);
     const { error } = await supabase.auth.signUp({
       email, password,
@@ -158,8 +156,9 @@ function LoginPage() {
               <form onSubmit={signIn} className="space-y-4 pt-4">
                 <div><Label>อีเมล</Label><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
                 <div>
-                  <Label>รหัสผ่าน 6 หลัก</Label>
+                  <Label>รหัสผ่าน</Label>
                   <PasswordField value={password} onChange={setPassword} />
+                  <p className="mt-1 text-xs text-muted-foreground">อย่างน้อย 6 ตัว ประกอบด้วยตัวหนังสือ ตัวเลข และอักขระพิเศษ</p>
                 </div>
                 <div className="flex items-center justify-between">
                   <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
@@ -182,8 +181,9 @@ function LoginPage() {
                 <div><Label>ชื่อ-นามสกุล</Label><Input required value={fullName} onChange={(e) => setFullName(e.target.value)} /></div>
                 <div><Label>อีเมล</Label><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
                 <div>
-                  <Label>รหัสผ่าน 6 หลัก</Label>
+                  <Label>รหัสผ่าน</Label>
                   <PasswordField value={password} onChange={setPassword} />
+                  <p className="mt-1 text-xs text-muted-foreground">อย่างน้อย 6 ตัว ประกอบด้วยตัวหนังสือ ตัวเลข และอักขระพิเศษ</p>
                 </div>
                 <Button type="submit" className="w-full" disabled={busy}>{busy ? "กำลังสมัคร..." : "สมัครสมาชิก"}</Button>
                 <p className="text-center text-xs text-muted-foreground">ผู้สมัครคนแรกจะได้สิทธิผู้ดูแลระบบโดยอัตโนมัติ</p>
