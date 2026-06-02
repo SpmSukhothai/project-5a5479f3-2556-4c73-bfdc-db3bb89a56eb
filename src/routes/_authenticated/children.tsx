@@ -79,10 +79,13 @@ function ChildrenPage() {
             <thead>
               <tr>
                 <th style={{ width: 50 }}>ลำดับ</th>
-                <th>ผู้มีสิทธิ</th>
+                <th>ผู้มีสิทธิ (สังกัด)</th>
                 <th>ชื่อบุตร</th>
                 <th>วันเกิด</th>
                 <th>อายุ</th>
+                <th>สถานศึกษาที่กำลังศึกษา</th>
+                <th>ระดับชั้น</th>
+                <th>ประเภท</th>
                 <th>สถานะ</th>
                 <th style={{ width: 100 }}>จัดการ</th>
               </tr>
@@ -91,10 +94,16 @@ function ChildrenPage() {
               {filtered.map((r: any, i: number) => (
                 <tr key={r.id}>
                   <td className="text-center">{i + 1}</td>
-                  <td>{r.guardians?.prefix}{r.guardians?.first_name} {r.guardians?.last_name}</td>
+                  <td>
+                    {r.guardians?.prefix}{r.guardians?.first_name} {r.guardians?.last_name}
+                    <div className="text-xs text-muted-foreground">{r.guardians?.schools?.school_name || "-"}</div>
+                  </td>
                   <td>{r.child_name}</td>
                   <td>{formatThaiDate(r.birth_date)}</td>
                   <td className="text-center">{age(r.birth_date)} ปี</td>
+                  <td>{r.study_place || "-"}</td>
+                  <td>{r.education_level ? EDU_LEVEL_LABEL[r.education_level] : "-"}</td>
+                  <td>{SCHOOL_TYPE_LABEL[r.school_type] || "-"}</td>
                   <td className="text-center">{r.is_active ? <span className="text-success">กำลังศึกษา</span> : <span className="text-muted-foreground">ไม่ใช้สิทธิ</span>}</td>
                   <td>
                     <div className="flex gap-1">
@@ -104,7 +113,7 @@ function ChildrenPage() {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && <tr><td colSpan={7} className="text-center text-muted-foreground">ไม่พบข้อมูล</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={10} className="text-center text-muted-foreground">ไม่พบข้อมูล</td></tr>}
             </tbody>
           </table>
         </div>
