@@ -10,9 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Pencil, Trash2, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
-import { formatThaiDate } from "@/lib/labels";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatThaiDate, EDU_LEVELS, EDU_LEVEL_LABEL, SCHOOL_TYPE_LABEL } from "@/lib/labels";
 
 export const Route = createFileRoute("/_authenticated/children")({ component: ChildrenPage });
+
+const emptyForm = { guardian_id: "", child_name: "", birth_date: "", study_place: "", education_level: "", school_type: "government", is_active: true };
 
 function ChildrenPage() {
   const { role } = useAuth();
@@ -20,7 +23,7 @@ function ChildrenPage() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState<any>({ guardian_id: "", child_name: "", birth_date: "", is_active: true });
+  const [form, setForm] = useState<any>({ ...emptyForm });
 
   const { data: guardians = [] } = useQuery({ queryKey: ["guardians-list"], queryFn: async () => (await supabase.from("guardians").select("id, prefix, first_name, last_name, employee_code").order("employee_code")).data ?? [] });
   const { data: rows = [] } = useQuery({
