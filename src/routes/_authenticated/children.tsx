@@ -28,7 +28,7 @@ function ChildrenPage() {
   const { data: guardians = [] } = useQuery({ queryKey: ["guardians-list"], queryFn: async () => (await supabase.from("guardians").select("id, prefix, first_name, last_name, employee_code").order("employee_code")).data ?? [] });
   const { data: rows = [] } = useQuery({
     queryKey: ["children"],
-    queryFn: async () => (await supabase.from("children").select("*, guardians(prefix, first_name, last_name, employee_code)").order("created_at", { ascending: false })).data ?? [],
+    queryFn: async () => (await supabase.from("children").select("*, guardians(prefix, first_name, last_name, employee_code, schools(school_name))").order("created_at", { ascending: false })).data ?? [],
   });
 
   const filtered = rows.filter((r: any) => `${r.child_name} ${r.guardians?.first_name || ""}`.toLowerCase().includes(q.toLowerCase()));
