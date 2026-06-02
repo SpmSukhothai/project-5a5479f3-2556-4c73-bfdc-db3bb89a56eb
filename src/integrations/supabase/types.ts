@@ -49,27 +49,40 @@ export type Database = {
           birth_date: string
           child_name: string
           created_at: string
+          education_level: Database["public"]["Enums"]["education_level"] | null
           guardian_id: string
           id: string
           is_active: boolean
+          school_type: Database["public"]["Enums"]["school_type"]
+          study_place: string | null
           updated_at: string
         }
         Insert: {
           birth_date: string
           child_name: string
           created_at?: string
+          education_level?:
+            | Database["public"]["Enums"]["education_level"]
+            | null
           guardian_id: string
           id?: string
           is_active?: boolean
+          school_type?: Database["public"]["Enums"]["school_type"]
+          study_place?: string | null
           updated_at?: string
         }
         Update: {
           birth_date?: string
           child_name?: string
           created_at?: string
+          education_level?:
+            | Database["public"]["Enums"]["education_level"]
+            | null
           guardian_id?: string
           id?: string
           is_active?: boolean
+          school_type?: Database["public"]["Enums"]["school_type"]
+          study_place?: string | null
           updated_at?: string
         }
         Relationships: [
