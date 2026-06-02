@@ -10,9 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Pencil, Trash2, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
-import { formatThaiDate } from "@/lib/labels";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatThaiDate, EDU_LEVELS, EDU_LEVEL_LABEL, SCHOOL_TYPE_LABEL } from "@/lib/labels";
 
 export const Route = createFileRoute("/_authenticated/children")({ component: ChildrenPage });
+
+const emptyForm = { guardian_id: "", child_name: "", birth_date: "", study_place: "", education_level: "", school_type: "government", is_active: true };
 
 function ChildrenPage() {
   const { role } = useAuth();
@@ -20,24 +23,26 @@ function ChildrenPage() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState<any>({ guardian_id: "", child_name: "", birth_date: "", is_active: true });
+  const [form, setForm] = useState<any>({ ...emptyForm });
 
   const { data: guardians = [] } = useQuery({ queryKey: ["guardians-list"], queryFn: async () => (await supabase.from("guardians").select("id, prefix, first_name, last_name, employee_code").order("employee_code")).data ?? [] });
   const { data: rows = [] } = useQuery({
     queryKey: ["children"],
-    queryFn: async () => (await supabase.from("children").select("*, guardians(prefix, first_name, last_name, employee_code)").order("created_at", { ascending: false })).data ?? [],
+    queryFn: async () => (await supabase.from("children").select("*, guardians(prefix, first_name, last_name, employee_code, schools(school_name))").order("created_at", { ascending: false })).data ?? [],
   });
 
   const filtered = rows.filter((r: any) => `${r.child_name} ${r.guardians?.first_name || ""}`.toLowerCase().includes(q.toLowerCase()));
 
-  const openNew = () => { setEditing(null); setForm({ guardian_id: "", child_name: "", birth_date: "", is_active: true }); setOpen(true); };
-  const openEdit = (r: any) => { setEditing(r); setForm(r); setOpen(true); };
+  const openNew = () => { setEditing(null); setForm({ ...emptyForm }); setOpen(true); };
+  const openEdit = (r: any) => { setEditing(r); setForm({ ...emptyForm, ...r, study_place: r.study_place ?? "", education_level: r.education_level ?? "" }); setOpen(true); };
 
   const save = async () => {
     if (!form.guardian_id) return toast.error("กรุณาเลือกผู้มีสิทธิ");
+    const { guardians, ...rest } = form;
+    const payload = { ...rest, education_level: form.education_level || null };
     const res = editing
-      ? await supabase.from("children").update(form).eq("id", editing.id)
-      : await supabase.from("children").insert(form);
+      ? await supabase.from("children").update(payload).eq("id", editing.id)
+      : await supabase.from("children").insert(payload);
     if (res.error) return toast.error("บันทึกไม่สำเร็จ", { description: res.error.message });
     toast.success("บันทึกสำเร็จ");
     setOpen(false);
@@ -74,10 +79,13 @@ function ChildrenPage() {
             <thead>
               <tr>
                 <th style={{ width: 50 }}>ลำดับ</th>
-                <th>ผู้มีสิทธิ</th>
+                <th>ผู้มีสิทธิ (สังกัด)</th>
                 <th>ชื่อบุตร</th>
                 <th>วันเกิด</th>
                 <th>อายุ</th>
+                <th>สถานศึกษาที่กำลังศึกษา</th>
+                <th>ระดับชั้น</th>
+                <th>ประเภท</th>
                 <th>สถานะ</th>
                 <th style={{ width: 100 }}>จัดการ</th>
               </tr>
@@ -86,10 +94,16 @@ function ChildrenPage() {
               {filtered.map((r: any, i: number) => (
                 <tr key={r.id}>
                   <td className="text-center">{i + 1}</td>
-                  <td>{r.guardians?.prefix}{r.guardians?.first_name} {r.guardians?.last_name}</td>
+                  <td>
+                    {r.guardians?.prefix}{r.guardians?.first_name} {r.guardians?.last_name}
+                    <div className="text-xs text-muted-foreground">{r.guardians?.schools?.school_name || "-"}</div>
+                  </td>
                   <td>{r.child_name}</td>
                   <td>{formatThaiDate(r.birth_date)}</td>
                   <td className="text-center">{age(r.birth_date)} ปี</td>
+                  <td>{r.study_place || "-"}</td>
+                  <td>{r.education_level ? EDU_LEVEL_LABEL[r.education_level] : "-"}</td>
+                  <td>{SCHOOL_TYPE_LABEL[r.school_type] || "-"}</td>
                   <td className="text-center">{r.is_active ? <span className="text-success">กำลังศึกษา</span> : <span className="text-muted-foreground">ไม่ใช้สิทธิ</span>}</td>
                   <td>
                     <div className="flex gap-1">
@@ -99,7 +113,7 @@ function ChildrenPage() {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && <tr><td colSpan={7} className="text-center text-muted-foreground">ไม่พบข้อมูล</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={10} className="text-center text-muted-foreground">ไม่พบข้อมูล</td></tr>}
             </tbody>
           </table>
         </div>
@@ -118,6 +132,23 @@ function ChildrenPage() {
             </div>
             <div><Label>ชื่อบุตร *</Label><Input value={form.child_name} onChange={(e) => setForm({ ...form, child_name: e.target.value })} /></div>
             <div><Label>วันเดือนปีเกิด *</Label><Input type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} /></div>
+            <div><Label>สถานศึกษา/มหาวิทยาลัยที่บุตรกำลังศึกษา</Label><Input placeholder="เช่น มหาวิทยาลัยเชียงใหม่ / โรงเรียนสุโขทัยวิทยาคม" value={form.study_place} onChange={(e) => setForm({ ...form, study_place: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>ระดับชั้นที่กำลังศึกษา</Label>
+                <Select value={form.education_level} onValueChange={(v) => setForm({ ...form, education_level: v })}>
+                  <SelectTrigger><SelectValue placeholder="-- เลือก --" /></SelectTrigger>
+                  <SelectContent>{EDU_LEVELS.map((lv) => <SelectItem key={lv} value={lv}>{EDU_LEVEL_LABEL[lv]}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>ประเภทสถานศึกษา</Label>
+                <Select value={form.school_type} onValueChange={(v) => setForm({ ...form, school_type: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{Object.entries(SCHOOL_TYPE_LABEL).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>ยกเลิก</Button>
