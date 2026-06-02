@@ -33,14 +33,16 @@ function ChildrenPage() {
 
   const filtered = rows.filter((r: any) => `${r.child_name} ${r.guardians?.first_name || ""}`.toLowerCase().includes(q.toLowerCase()));
 
-  const openNew = () => { setEditing(null); setForm({ guardian_id: "", child_name: "", birth_date: "", is_active: true }); setOpen(true); };
-  const openEdit = (r: any) => { setEditing(r); setForm(r); setOpen(true); };
+  const openNew = () => { setEditing(null); setForm({ ...emptyForm }); setOpen(true); };
+  const openEdit = (r: any) => { setEditing(r); setForm({ ...emptyForm, ...r, study_place: r.study_place ?? "", education_level: r.education_level ?? "" }); setOpen(true); };
 
   const save = async () => {
     if (!form.guardian_id) return toast.error("กรุณาเลือกผู้มีสิทธิ");
+    const { guardians, ...rest } = form;
+    const payload = { ...rest, education_level: form.education_level || null };
     const res = editing
-      ? await supabase.from("children").update(form).eq("id", editing.id)
-      : await supabase.from("children").insert(form);
+      ? await supabase.from("children").update(payload).eq("id", editing.id)
+      : await supabase.from("children").insert(payload);
     if (res.error) return toast.error("บันทึกไม่สำเร็จ", { description: res.error.message });
     toast.success("บันทึกสำเร็จ");
     setOpen(false);
