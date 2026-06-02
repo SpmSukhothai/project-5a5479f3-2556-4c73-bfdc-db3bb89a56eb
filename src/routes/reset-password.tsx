@@ -10,6 +10,8 @@ import { ORG_NAME, SYSTEM_NAME } from "@/lib/labels";
 
 export const Route = createFileRoute("/reset-password")({ component: ResetPasswordPage });
 
+const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{6,}$/;
+
 function ResetPasswordPage() {
   const nav = useNavigate();
   const [password, setPassword] = useState("");
@@ -17,11 +19,9 @@ function ResetPasswordPage() {
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const onPwd = (v: string) => v.replace(/\D/g, "").slice(0, 6);
-
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    if (password.length !== 6) { toast.error("รหัสผ่านต้องมี 6 หลัก"); return; }
+    if (!passwordRegex.test(password)) { toast.error("รหัสผ่านต้องมีอย่างน้อย 6 ตัว และประกอบด้วยตัวหนังสือ ตัวเลข และอักขระพิเศษ"); return; }
     if (password !== confirm) { toast.error("รหัสผ่านทั้งสองช่องไม่ตรงกัน"); return; }
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password });
@@ -45,18 +45,16 @@ function ResetPasswordPage() {
         </div>
         <form onSubmit={submit} className="space-y-4">
           <div>
-            <Label>รหัสผ่านใหม่ 6 หลัก</Label>
+            <Label>รหัสผ่านใหม่</Label>
             <div className="relative">
               <Input
                 type={show ? "text" : "password"}
-                inputMode="numeric"
-                maxLength={6}
                 minLength={6}
                 required
-                placeholder="รหัสผ่าน 6 หลัก"
+                placeholder="รหัสผ่านอย่างน้อย 6 ตัว"
                 value={password}
-                onChange={(e) => setPassword(onPwd(e.target.value))}
-                className="pr-10 tracking-[0.3em]"
+                onChange={(e) => setPassword(e.target.value)}
+                className="pr-10"
               />
               <button
                 type="button"
@@ -67,19 +65,17 @@ function ResetPasswordPage() {
                 {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+            <p className="mt-1 text-xs text-muted-foreground">อย่างน้อย 6 ตัว ประกอบด้วยตัวหนังสือ ตัวเลข และอักขระพิเศษ</p>
           </div>
           <div>
             <Label>ยืนยันรหัสผ่าน</Label>
             <Input
               type={show ? "text" : "password"}
-              inputMode="numeric"
-              maxLength={6}
               minLength={6}
               required
-              placeholder="ยืนยันรหัสผ่าน 6 หลัก"
+              placeholder="ยืนยันรหัสผ่าน"
               value={confirm}
-              onChange={(e) => setConfirm(onPwd(e.target.value))}
-              className="tracking-[0.3em]"
+              onChange={(e) => setConfirm(e.target.value)}
             />
           </div>
           <Button type="submit" className="w-full" disabled={busy}>{busy ? "กำลังบันทึก..." : "บันทึกรหัสผ่านใหม่"}</Button>

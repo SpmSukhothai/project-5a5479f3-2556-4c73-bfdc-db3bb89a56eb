@@ -22,6 +22,7 @@ import { useAuth } from "@/hooks/use-auth";
 export const Route = createFileRoute("/login")({ component: LoginPage });
 
 const REMEMBER_KEY = "spm_sukhothai_remember_email";
+const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{6,}$/;
 
 function PasswordField({
   value,
