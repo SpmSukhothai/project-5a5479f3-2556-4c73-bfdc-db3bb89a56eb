@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Pencil, Trash2, Plus, Search } from "lucide-react";
+import { Pencil, Trash2, Plus, Search, History } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,6 +24,7 @@ function ChildrenPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState<any>({ ...emptyForm });
+  const [histFor, setHistFor] = useState<any>(null);
 
   const { data: guardians = [] } = useQuery({ queryKey: ["guardians-list"], queryFn: async () => (await supabase.from("guardians").select("id, prefix, first_name, last_name, employee_code").order("employee_code")).data ?? [] });
   const { data: rows = [] } = useQuery({
@@ -42,8 +43,17 @@ function ChildrenPage() {
     const payload = { ...rest, education_level: form.education_level || null };
     const res = editing
       ? await supabase.from("children").update(payload).eq("id", editing.id)
-      : await supabase.from("children").insert(payload);
+      : await supabase.from("children").insert(payload).select("id").single();
     if (res.error) return toast.error("บันทึกไม่สำเร็จ", { description: res.error.message });
+    // สร้างรายการประวัติการศึกษาปัจจุบันให้บุตรใหม่ที่มีข้อมูลสถานศึกษา
+    if (!editing && payload.study_place) {
+      const newId = (res as any).data?.id;
+      if (newId) {
+        await supabase.from("child_education_history").insert({
+          child_id: newId, study_place: payload.study_place, education_level: payload.education_level, school_type: payload.school_type, is_current: true,
+        });
+      }
+    }
     toast.success("บันทึกสำเร็จ");
     setOpen(false);
     qc.invalidateQueries({ queryKey: ["children"] });
@@ -87,7 +97,7 @@ function ChildrenPage() {
                 <th>ระดับชั้น</th>
                 <th>ประเภท</th>
                 <th>สถานะ</th>
-                <th style={{ width: 100 }}>จัดการ</th>
+                <th style={{ width: 130 }}>จัดการ</th>
               </tr>
             </thead>
             <tbody>
@@ -107,6 +117,7 @@ function ChildrenPage() {
                   <td className="text-center">{r.is_active ? <span className="text-success">กำลังศึกษา</span> : <span className="text-muted-foreground">ไม่ใช้สิทธิ</span>}</td>
                   <td>
                     <div className="flex gap-1">
+                      <Button size="icon" variant="ghost" title="ประวัติ/เปลี่ยนสถานศึกษา" onClick={() => setHistFor(r)}><History className="h-4 w-4" /></Button>
                       <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
                       {role === "admin" && <Button size="icon" variant="ghost" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
                     </div>
@@ -149,6 +160,7 @@ function ChildrenPage() {
                 </Select>
               </div>
             </div>
+            {editing && <p className="text-xs text-muted-foreground">หากบุตรเปลี่ยนสถานศึกษา/ระดับชั้น กรุณาใช้ปุ่ม "ประวัติ/เปลี่ยนสถานศึกษา" เพื่อเก็บประวัติย้อนหลัง</p>}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>ยกเลิก</Button>
@@ -156,6 +168,95 @@ function ChildrenPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {histFor && <EducationHistoryDialog child={histFor} onClose={() => setHistFor(null)} />}
     </div>
+  );
+}
+
+function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [adding, setAdding] = useState(false);
+  const [studyPlace, setStudyPlace] = useState("");
+  const [level, setLevel] = useState("");
+  const [schoolType, setSchoolType] = useState("government");
+  const [academicYear, setAcademicYear] = useState("");
+  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
+
+  const { data: history = [] } = useQuery({
+    queryKey: ["education-history", child.id],
+    queryFn: async () => (await supabase.from("child_education_history").select("*").eq("child_id", child.id).order("start_date", { ascending: false })).data ?? [],
+  });
+
+  const submit = async () => {
+    if (!studyPlace.trim()) return toast.error("กรุณากรอกสถานศึกษา");
+    const { error } = await supabase.from("child_education_history").insert({
+      child_id: child.id, study_place: studyPlace.trim(), education_level: level || null, school_type: schoolType as any,
+      academic_year: academicYear ? Number(academicYear) : null, start_date: startDate, is_current: true,
+    });
+    if (error) return toast.error("บันทึกไม่สำเร็จ", { description: error.message });
+    const { error: e2 } = await supabase.from("children").update({ study_place: studyPlace.trim(), education_level: (level || null) as any, school_type: schoolType as any }).eq("id", child.id);
+    if (e2) return toast.error("อัปเดตข้อมูลปัจจุบันไม่สำเร็จ", { description: e2.message });
+    toast.success("บันทึกการเปลี่ยนสถานศึกษาสำเร็จ");
+    setAdding(false); setStudyPlace(""); setLevel(""); setSchoolType("government"); setAcademicYear("");
+    qc.invalidateQueries({ queryKey: ["education-history", child.id] });
+    qc.invalidateQueries({ queryKey: ["children"] });
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>ประวัติการศึกษา — {child.child_name}</DialogTitle></DialogHeader>
+
+        <div className="space-y-2 max-h-72 overflow-y-auto">
+          {history.length === 0 && <p className="text-sm text-muted-foreground">ยังไม่มีประวัติ</p>}
+          {history.map((h: any) => (
+            <div key={h.id} className="flex items-start justify-between rounded-md border p-3 text-sm">
+              <div>
+                <div className="font-medium">{h.study_place}</div>
+                <div className="text-muted-foreground">{h.education_level ? EDU_LEVEL_LABEL[h.education_level] : "-"} • {SCHOOL_TYPE_LABEL[h.school_type] || "-"}{h.academic_year ? ` • ปีการศึกษา ${h.academic_year}` : ""}</div>
+                <div className="text-xs text-muted-foreground">{formatThaiDate(h.start_date)} – {h.end_date ? formatThaiDate(h.end_date) : "ปัจจุบัน"}</div>
+              </div>
+              {h.is_current && <span className="rounded bg-success/15 px-2 py-0.5 text-xs text-success">ปัจจุบัน</span>}
+            </div>
+          ))}
+        </div>
+
+        {adding ? (
+          <div className="space-y-3 border-t pt-3">
+            <div><Label>สถานศึกษา/มหาวิทยาลัยใหม่ *</Label><Input placeholder="เช่น มหาวิทยาลัยเชียงใหม่" value={studyPlace} onChange={(e) => setStudyPlace(e.target.value)} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>ระดับชั้น</Label>
+                <Select value={level} onValueChange={setLevel}>
+                  <SelectTrigger><SelectValue placeholder="-- เลือก --" /></SelectTrigger>
+                  <SelectContent>{EDU_LEVELS.map((lv) => <SelectItem key={lv} value={lv}>{EDU_LEVEL_LABEL[lv]}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>ประเภทสถานศึกษา</Label>
+                <Select value={schoolType} onValueChange={setSchoolType}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{Object.entries(SCHOOL_TYPE_LABEL).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>ปีการศึกษา</Label><Input type="number" placeholder="เช่น 2568" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} /></div>
+              <div><Label>วันที่มีผล</Label><Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setAdding(false)}>ยกเลิก</Button>
+              <Button onClick={submit}>บันทึกการเปลี่ยน</Button>
+            </div>
+          </div>
+        ) : (
+          <DialogFooter>
+            <Button variant="outline" onClick={onClose}>ปิด</Button>
+            <Button onClick={() => setAdding(true)}><Plus className="mr-2 h-4 w-4" />เปลี่ยนสถานศึกษา</Button>
+          </DialogFooter>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
