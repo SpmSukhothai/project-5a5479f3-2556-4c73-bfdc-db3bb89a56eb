@@ -44,6 +44,60 @@ export type Database = {
         }
         Relationships: []
       }
+      child_education_history: {
+        Row: {
+          academic_year: number | null
+          child_id: string
+          created_at: string
+          education_level: Database["public"]["Enums"]["education_level"] | null
+          end_date: string | null
+          id: string
+          is_current: boolean
+          school_type: Database["public"]["Enums"]["school_type"]
+          start_date: string
+          study_place: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year?: number | null
+          child_id: string
+          created_at?: string
+          education_level?:
+            | Database["public"]["Enums"]["education_level"]
+            | null
+          end_date?: string | null
+          id?: string
+          is_current?: boolean
+          school_type?: Database["public"]["Enums"]["school_type"]
+          start_date?: string
+          study_place: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: number | null
+          child_id?: string
+          created_at?: string
+          education_level?:
+            | Database["public"]["Enums"]["education_level"]
+            | null
+          end_date?: string | null
+          id?: string
+          is_current?: boolean
+          school_type?: Database["public"]["Enums"]["school_type"]
+          start_date?: string
+          study_place?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "child_education_history_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       children: {
         Row: {
           birth_date: string
@@ -91,6 +145,60 @@ export type Database = {
             columns: ["guardian_id"]
             isOneToOne: false
             referencedRelation: "guardians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guardian_affiliation_history: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          guardian_id: string
+          id: string
+          is_current: boolean
+          note: string | null
+          position: string | null
+          school_id: string | null
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          guardian_id: string
+          id?: string
+          is_current?: boolean
+          note?: string | null
+          position?: string | null
+          school_id?: string | null
+          start_date?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          guardian_id?: string
+          id?: string
+          is_current?: boolean
+          note?: string | null
+          position?: string | null
+          school_id?: string | null
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guardian_affiliation_history_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "guardians"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guardian_affiliation_history_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
         ]
