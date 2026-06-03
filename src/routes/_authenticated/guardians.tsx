@@ -8,9 +8,10 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pencil, Trash2, Plus, Search } from "lucide-react";
+import { Pencil, Trash2, Plus, Search, History } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { formatThaiDate } from "@/lib/labels";
 
 export const Route = createFileRoute("/_authenticated/guardians")({ component: GuardiansPage });
 
@@ -21,6 +22,7 @@ function GuardiansPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState<any>({ employee_code: "", prefix: "นาย", first_name: "", last_name: "", national_id: "", school_id: "", phone: "", position: "" });
+  const [histFor, setHistFor] = useState<any>(null);
 
   const { data: schools = [] } = useQuery({ queryKey: ["schools-list"], queryFn: async () => (await supabase.from("schools").select("id, school_name").order("school_name")).data ?? [] });
   const { data: rows = [] } = useQuery({
@@ -81,7 +83,7 @@ function GuardiansPage() {
                 <th>โรงเรียนต้นสังกัด</th>
                 <th>เบอร์โทร</th>
                 <th>ตำแหน่ง</th>
-                <th style={{ width: 100 }}>จัดการ</th>
+                <th style={{ width: 130 }}>จัดการ</th>
               </tr>
             </thead>
             <tbody>
@@ -96,6 +98,7 @@ function GuardiansPage() {
                   <td>{r.position || "-"}</td>
                   <td>
                     <div className="flex gap-1">
+                      <Button size="icon" variant="ghost" title="ประวัติ/ย้ายต้นสังกัด" onClick={() => setHistFor(r)}><History className="h-4 w-4" /></Button>
                       <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
                       {role === "admin" && <Button size="icon" variant="ghost" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
                     </div>
@@ -141,6 +144,85 @@ function GuardiansPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {histFor && <AffiliationHistoryDialog guardian={histFor} schools={schools} onClose={() => setHistFor(null)} />}
     </div>
+  );
+}
+
+function AffiliationHistoryDialog({ guardian, schools, onClose }: { guardian: any; schools: any[]; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [adding, setAdding] = useState(false);
+  const [newSchool, setNewSchool] = useState("");
+  const [position, setPosition] = useState("");
+  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
+  const [note, setNote] = useState("");
+
+  const { data: history = [] } = useQuery({
+    queryKey: ["affiliation-history", guardian.id],
+    queryFn: async () => (await supabase.from("guardian_affiliation_history").select("*, schools(school_name)").eq("guardian_id", guardian.id).order("start_date", { ascending: false })).data ?? [],
+  });
+
+  const submit = async () => {
+    if (!newSchool) return toast.error("กรุณาเลือกโรงเรียนต้นสังกัดใหม่");
+    const { error } = await supabase.from("guardian_affiliation_history").insert({
+      guardian_id: guardian.id, school_id: newSchool, position: position || null, start_date: startDate, note: note || null, is_current: true,
+    });
+    if (error) return toast.error("บันทึกไม่สำเร็จ", { description: error.message });
+    const { error: e2 } = await supabase.from("guardians").update({ school_id: newSchool, position: position || guardian.position }).eq("id", guardian.id);
+    if (e2) return toast.error("อัปเดตข้อมูลปัจจุบันไม่สำเร็จ", { description: e2.message });
+    toast.success("บันทึกการย้ายต้นสังกัดสำเร็จ");
+    setAdding(false); setNewSchool(""); setPosition(""); setNote("");
+    qc.invalidateQueries({ queryKey: ["affiliation-history", guardian.id] });
+    qc.invalidateQueries({ queryKey: ["guardians"] });
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>ประวัติต้นสังกัด — {guardian.prefix}{guardian.first_name} {guardian.last_name}</DialogTitle></DialogHeader>
+
+        <div className="space-y-2 max-h-72 overflow-y-auto">
+          {history.length === 0 && <p className="text-sm text-muted-foreground">ยังไม่มีประวัติ</p>}
+          {history.map((h: any) => (
+            <div key={h.id} className="flex items-start justify-between rounded-md border p-3 text-sm">
+              <div>
+                <div className="font-medium">{h.schools?.school_name || "-"}</div>
+                <div className="text-muted-foreground">{h.position || "-"}</div>
+                <div className="text-xs text-muted-foreground">{formatThaiDate(h.start_date)} – {h.end_date ? formatThaiDate(h.end_date) : "ปัจจุบัน"}</div>
+                {h.note && <div className="text-xs text-muted-foreground">หมายเหตุ: {h.note}</div>}
+              </div>
+              {h.is_current && <span className="rounded bg-success/15 px-2 py-0.5 text-xs text-success">ปัจจุบัน</span>}
+            </div>
+          ))}
+        </div>
+
+        {adding ? (
+          <div className="space-y-3 border-t pt-3">
+            <div>
+              <Label>โรงเรียนต้นสังกัดใหม่ *</Label>
+              <Select value={newSchool} onValueChange={setNewSchool}>
+                <SelectTrigger><SelectValue placeholder="-- เลือก --" /></SelectTrigger>
+                <SelectContent>{schools.map((s: any) => <SelectItem key={s.id} value={s.id}>{s.school_name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>วันที่มีผล</Label><Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
+              <div><Label>ตำแหน่ง</Label><Input value={position} onChange={(e) => setPosition(e.target.value)} /></div>
+            </div>
+            <div><Label>หมายเหตุ</Label><Input value={note} onChange={(e) => setNote(e.target.value)} /></div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setAdding(false)}>ยกเลิก</Button>
+              <Button onClick={submit}>บันทึกการย้าย</Button>
+            </div>
+          </div>
+        ) : (
+          <DialogFooter>
+            <Button variant="outline" onClick={onClose}>ปิด</Button>
+            <Button onClick={() => setAdding(true)}><Plus className="mr-2 h-4 w-4" />ย้ายต้นสังกัด</Button>
+          </DialogFooter>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
