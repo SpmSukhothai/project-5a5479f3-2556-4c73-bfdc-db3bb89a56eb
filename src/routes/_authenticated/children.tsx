@@ -191,7 +191,7 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
   const submit = async () => {
     if (!studyPlace.trim()) return toast.error("กรุณากรอกสถานศึกษา");
     const { error } = await supabase.from("child_education_history").insert({
-      child_id: child.id, study_place: studyPlace.trim(), education_level: level || null, school_type: schoolType as any,
+      child_id: child.id, study_place: studyPlace.trim(), education_level: (level || null) as any, school_type: schoolType as any,
       academic_year: academicYear ? Number(academicYear) : null, start_date: startDate, is_current: true,
     });
     if (error) return toast.error("บันทึกไม่สำเร็จ", { description: error.message });
