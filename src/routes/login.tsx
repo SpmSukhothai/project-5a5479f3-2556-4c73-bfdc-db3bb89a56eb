@@ -22,7 +22,7 @@ import { useAuth } from "@/hooks/use-auth";
 export const Route = createFileRoute("/login")({ component: LoginPage });
 
 const REMEMBER_KEY = "spm_sukhothai_remember_email";
-const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{6,}$/;
+const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{6,}$/;
 
 function PasswordField({
   value,
@@ -88,7 +88,7 @@ function LoginPage() {
 
   const signIn = async (e: FormEvent) => {
     e.preventDefault();
-    if (!passwordRegex.test(password)) { toast.error("รหัสผ่านต้องมีอย่างน้อย 6 ตัว และประกอบด้วยตัวหนังสือ ตัวเลข และอักขระพิเศษ"); return; }
+    if (!passwordRegex.test(password)) { toast.error("รหัสผ่านต้องมีอย่างน้อย 6 ตัว ประกอบด้วยตัวหนังสือและตัวเลข"); return; }
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
@@ -100,7 +100,7 @@ function LoginPage() {
 
   const signUp = async (e: FormEvent) => {
     e.preventDefault();
-    if (!passwordRegex.test(password)) { toast.error("รหัสผ่านต้องมีอย่างน้อย 6 ตัว และประกอบด้วยตัวหนังสือ ตัวเลข และอักขระพิเศษ"); return; }
+    if (!passwordRegex.test(password)) { toast.error("รหัสผ่านต้องมีอย่างน้อย 6 ตัว ประกอบด้วยตัวหนังสือและตัวเลข"); return; }
     setBusy(true);
     const { error } = await supabase.auth.signUp({
       email, password,
@@ -158,7 +158,7 @@ function LoginPage() {
                 <div>
                   <Label>รหัสผ่าน</Label>
                   <PasswordField value={password} onChange={setPassword} />
-                  <p className="mt-1 text-xs text-muted-foreground">อย่างน้อย 6 ตัว ประกอบด้วยตัวหนังสือ ตัวเลข และอักขระพิเศษ</p>
+                  <p className="mt-1 text-xs text-muted-foreground">อย่างน้อย 6 ตัว ประกอบด้วยตัวหนังสือและตัวเลข (อักขระพิเศษเพิ่มได้)</p>
                 </div>
                 <div className="flex items-center justify-between">
                   <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
@@ -183,7 +183,7 @@ function LoginPage() {
                 <div>
                   <Label>รหัสผ่าน</Label>
                   <PasswordField value={password} onChange={setPassword} />
-                  <p className="mt-1 text-xs text-muted-foreground">อย่างน้อย 6 ตัว ประกอบด้วยตัวหนังสือ ตัวเลข และอักขระพิเศษ</p>
+                  <p className="mt-1 text-xs text-muted-foreground">อย่างน้อย 6 ตัว ประกอบด้วยตัวหนังสือและตัวเลข (อักขระพิเศษเพิ่มได้)</p>
                 </div>
                 <Button type="submit" className="w-full" disabled={busy}>{busy ? "กำลังสมัคร..." : "สมัครสมาชิก"}</Button>
                 <p className="text-center text-xs text-muted-foreground">ผู้สมัครคนแรกจะได้สิทธิผู้ดูแลระบบโดยอัตโนมัติ</p>
