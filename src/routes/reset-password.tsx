@@ -21,7 +21,7 @@ function ResetPasswordPage() {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!passwordRegex.test(password)) { toast.error("รหัสผ่านต้องมีอย่างน้อย 6 ตัว และประกอบด้วยตัวหนังสือ ตัวเลข และอักขระพิเศษ"); return; }
+    if (!passwordRegex.test(password)) { toast.error("รหัสผ่านต้องมีอย่างน้อย 6 ตัว ประกอบด้วยตัวหนังสือและตัวเลข"); return; }
     if (password !== confirm) { toast.error("รหัสผ่านทั้งสองช่องไม่ตรงกัน"); return; }
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password });
@@ -65,7 +65,7 @@ function ResetPasswordPage() {
                 {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">อย่างน้อย 6 ตัว ประกอบด้วยตัวหนังสือ ตัวเลข และอักขระพิเศษ</p>
+            <p className="mt-1 text-xs text-muted-foreground">อย่างน้อย 6 ตัว ประกอบด้วยตัวหนังสือและตัวเลข (อักขระพิเศษเพิ่มได้)</p>
           </div>
           <div>
             <Label>ยืนยันรหัสผ่าน</Label>
