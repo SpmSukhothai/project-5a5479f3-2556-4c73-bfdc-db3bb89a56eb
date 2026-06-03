@@ -10,7 +10,7 @@ import { ORG_NAME, SYSTEM_NAME } from "@/lib/labels";
 
 export const Route = createFileRoute("/reset-password")({ component: ResetPasswordPage });
 
-const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{6,}$/;
+const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{6,}$/;
 
 function ResetPasswordPage() {
   const nav = useNavigate();
