@@ -39,7 +39,8 @@ function GuardiansPage() {
   const openEdit = (r: any) => { setEditing(r); setForm({ ...r, school_id: r.school_id ?? "" }); setOpen(true); };
 
   const save = async () => {
-    const payload = { ...form, school_id: form.school_id || null };
+    const { schools, id, created_at, updated_at, ...rest } = form;
+    const payload = { ...rest, school_id: form.school_id || null };
     const res = editing
       ? await supabase.from("guardians").update(payload).eq("id", editing.id)
       : await supabase.from("guardians").insert(payload);
