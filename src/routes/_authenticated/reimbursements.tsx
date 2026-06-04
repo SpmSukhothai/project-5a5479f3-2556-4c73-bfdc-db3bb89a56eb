@@ -71,23 +71,22 @@ function ReimbPage() {
     setOpen(true);
   };
 
-  // auto-fill study place / level / type from the child's current education record
+  // auto-fill study place / level / type / entitlement from the child's data
   const updateChild = (childId: string) => {
+    const child = children.find((c: any) => c.id === childId);
     const edu = eduHistory.find((e: any) => e.child_id === childId);
-    if (!edu) {
-      setForm({ ...form, child_id: childId, study_place: "", entitled_amount: 0 });
-      return;
-    }
-    const lvl = (edu.education_level as typeof EDU_LEVELS[number]) || form.education_level;
-    const st = (edu.school_type as "government" | "private") || form.school_type;
+    // prefer the child's current record; fall back to education history
+    const lvl = ((child?.education_level || edu?.education_level) as typeof EDU_LEVELS[number]) || form.education_level;
+    const st = ((child?.school_type || edu?.school_type) as "government" | "private") || form.school_type;
+    const place = child?.study_place || edu?.study_place || "";
     const rate = rates.find((r: any) => r.school_type === st && r.education_level === lvl && r.academic_year === form.academic_year);
     setForm({
       ...form,
       child_id: childId,
-      study_place: edu.study_place || "",
+      study_place: place,
       education_level: lvl,
       school_type: st,
-      entitled_amount: Number(rate?.max_amount || form.entitled_amount),
+      entitled_amount: rate ? Number(rate.max_amount) : 0,
     });
   };
   const updateLevel = (lvl: any) => {
