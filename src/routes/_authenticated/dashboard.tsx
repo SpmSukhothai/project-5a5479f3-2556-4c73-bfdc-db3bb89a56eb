@@ -36,7 +36,7 @@ function Dashboard() {
   // By school
   const bySchool: Record<string, number> = {};
   data.reimbs.forEach((r: any) => {
-    const name = r.schools?.school_name ?? "ไม่ระบุ";
+    const name = r.study_place ?? "ไม่ระบุ";
     bySchool[name] = (bySchool[name] || 0) + Number(r.sem1_amount) + Number(r.sem2_amount);
   });
   const bySchoolData = Object.entries(bySchool).map(([k, v]) => ({ name: k, amount: v })).slice(0, 8);
