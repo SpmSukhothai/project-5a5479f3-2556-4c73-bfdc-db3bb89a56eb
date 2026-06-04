@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatThaiDate, EDU_LEVELS, EDU_LEVEL_LABEL, SCHOOL_TYPE_LABEL } from "@/lib/labels";
+import { ThaiDatePicker } from "@/components/ThaiDatePicker";
 
 export const Route = createFileRoute("/_authenticated/children")({ component: ChildrenPage });
 
@@ -142,7 +143,7 @@ function ChildrenPage() {
               </select>
             </div>
             <div><Label>ชื่อบุตร *</Label><Input value={form.child_name} onChange={(e) => setForm({ ...form, child_name: e.target.value })} /></div>
-            <div><Label>วันเดือนปีเกิด *</Label><Input type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} /></div>
+            <div><Label>วันเดือนปีเกิด *</Label><ThaiDatePicker value={form.birth_date} onChange={(v) => setForm({ ...form, birth_date: v })} placeholder="เลือกวันเกิด" /></div>
             <div><Label>สถานศึกษา/มหาวิทยาลัยที่บุตรกำลังศึกษา</Label><Input placeholder="เช่น มหาวิทยาลัยเชียงใหม่ / โรงเรียนสุโขทัยวิทยาคม" value={form.study_place} onChange={(e) => setForm({ ...form, study_place: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
               <div>
