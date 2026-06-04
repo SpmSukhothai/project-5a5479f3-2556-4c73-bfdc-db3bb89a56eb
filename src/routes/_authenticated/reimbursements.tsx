@@ -48,12 +48,12 @@ function ReimbPage() {
   const { data: rows = [] } = useQuery({
     queryKey: ["reimb", year],
     queryFn: async () => (await supabase.from("reimbursements")
-      .select("*, guardians(prefix,first_name,last_name), children(child_name), schools(school_name)")
+      .select("*, guardians(prefix,first_name,last_name), children(child_name)")
       .eq("academic_year", year).order("registration_no")).data ?? [],
   });
   const { data: guardians = [] } = useQuery({ queryKey: ["g-list"], queryFn: async () => (await supabase.from("guardians").select("id, prefix, first_name, last_name, employee_code").order("employee_code")).data ?? [] });
   const { data: children = [] } = useQuery({ queryKey: ["c-list"], queryFn: async () => (await supabase.from("children").select("id, child_name, guardian_id").order("child_name")).data ?? [] });
-  const { data: schools = [] } = useQuery({ queryKey: ["s-list2"], queryFn: async () => (await supabase.from("schools").select("id, school_name, school_type").order("school_name")).data ?? [] });
+  const { data: eduHistory = [] } = useQuery({ queryKey: ["edu-current"], queryFn: async () => (await supabase.from("child_education_history").select("child_id, study_place, education_level, school_type").eq("is_current", true)).data ?? [] });
   const { data: rates = [] } = useQuery({ queryKey: ["rates"], queryFn: async () => (await supabase.from("reimbursement_rates").select("*")).data ?? [] });
 
   const filteredChildren = children.filter((c: any) => !form.guardian_id || c.guardian_id === form.guardian_id);
