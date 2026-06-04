@@ -119,7 +119,7 @@ function ReimbPage() {
   };
 
   const filtered = rows.filter((r: any) => {
-    const t = `${r.registration_no} ${r.guardians?.first_name} ${r.children?.child_name} ${r.schools?.school_name}`.toLowerCase();
+    const t = `${r.registration_no} ${r.guardians?.first_name} ${r.children?.child_name} ${r.study_place ?? ""}`.toLowerCase();
     return t.includes(q.toLowerCase());
   });
 
