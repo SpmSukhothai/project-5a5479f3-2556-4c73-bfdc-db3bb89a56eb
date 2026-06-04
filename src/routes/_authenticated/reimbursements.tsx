@@ -187,7 +187,7 @@ function ReimbPage() {
                     <td className="text-center">{r.registration_no}</td>
                     <td>{r.guardians?.prefix}{r.guardians?.first_name} {r.guardians?.last_name}</td>
                     <td>{r.children?.child_name}</td>
-                    <td>{r.schools?.school_name || "-"}</td>
+                    <td>{r.study_place || "-"}</td>
                     <td>{EDU_LEVEL_LABEL[r.education_level]}</td>
                     <td className="text-center">{SCHOOL_TYPE_LABEL[r.school_type]}</td>
                     <td className="text-right">{formatTHB(r.entitled_amount)}</td>
