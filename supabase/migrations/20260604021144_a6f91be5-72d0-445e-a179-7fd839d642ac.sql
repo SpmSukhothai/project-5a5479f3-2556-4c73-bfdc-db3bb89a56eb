@@ -1,0 +1,1 @@
+ALTER TABLE public.reimbursements ADD COLUMN IF NOT EXISTS study_place text;
