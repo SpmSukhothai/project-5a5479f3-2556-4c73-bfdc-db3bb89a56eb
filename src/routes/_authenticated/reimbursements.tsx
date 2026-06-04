@@ -19,7 +19,7 @@ type Form = {
   academic_year: number;
   guardian_id: string;
   child_id: string;
-  school_id: string;
+  study_place: string;
   education_level: typeof EDU_LEVELS[number];
   school_type: "government" | "private";
   entitled_amount: number;
