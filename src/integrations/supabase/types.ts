@@ -325,6 +325,7 @@ export type Database = {
           sem2_pay_date: string | null
           sem2_receipt_date: string | null
           sem2_receipt_no: string | null
+          study_place: string | null
           updated_at: string
         }
         Insert: {
@@ -350,6 +351,7 @@ export type Database = {
           sem2_pay_date?: string | null
           sem2_receipt_date?: string | null
           sem2_receipt_no?: string | null
+          study_place?: string | null
           updated_at?: string
         }
         Update: {
@@ -375,6 +377,7 @@ export type Database = {
           sem2_pay_date?: string | null
           sem2_receipt_date?: string | null
           sem2_receipt_no?: string | null
+          study_place?: string | null
           updated_at?: string
         }
         Relationships: [

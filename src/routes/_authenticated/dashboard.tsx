@@ -15,7 +15,7 @@ function Dashboard() {
       const [guardians, children, reimbs, rates] = await Promise.all([
         supabase.from("guardians").select("id", { count: "exact", head: true }),
         supabase.from("children").select("id", { count: "exact", head: true }),
-        supabase.from("reimbursements").select("*, schools(school_name)").order("created_at", { ascending: false }),
+        supabase.from("reimbursements").select("*").order("created_at", { ascending: false }),
         supabase.from("reimbursement_rates").select("*"),
       ]);
       return {
@@ -36,7 +36,7 @@ function Dashboard() {
   // By school
   const bySchool: Record<string, number> = {};
   data.reimbs.forEach((r: any) => {
-    const name = r.schools?.school_name ?? "ไม่ระบุ";
+    const name = r.study_place ?? "ไม่ระบุ";
     bySchool[name] = (bySchool[name] || 0) + Number(r.sem1_amount) + Number(r.sem2_amount);
   });
   const bySchoolData = Object.entries(bySchool).map(([k, v]) => ({ name: k, amount: v })).slice(0, 8);

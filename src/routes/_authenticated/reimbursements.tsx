@@ -19,7 +19,7 @@ type Form = {
   academic_year: number;
   guardian_id: string;
   child_id: string;
-  school_id: string;
+  study_place: string;
   education_level: typeof EDU_LEVELS[number];
   school_type: "government" | "private";
   entitled_amount: number;
@@ -29,7 +29,7 @@ type Form = {
 };
 
 const emptyForm: Form = {
-  academic_year: 2569, guardian_id: "", child_id: "", school_id: "",
+  academic_year: 2569, guardian_id: "", child_id: "", study_place: "",
   education_level: "primary", school_type: "government", entitled_amount: 0,
   sem1_pay_date: "", sem1_doc_no: "", sem1_receipt_no: "", sem1_receipt_date: "", sem1_amount: 0,
   sem2_pay_date: "", sem2_doc_no: "", sem2_receipt_no: "", sem2_receipt_date: "", sem2_amount: 0,
@@ -48,12 +48,12 @@ function ReimbPage() {
   const { data: rows = [] } = useQuery({
     queryKey: ["reimb", year],
     queryFn: async () => (await supabase.from("reimbursements")
-      .select("*, guardians(prefix,first_name,last_name), children(child_name), schools(school_name)")
+      .select("*, guardians(prefix,first_name,last_name), children(child_name)")
       .eq("academic_year", year).order("registration_no")).data ?? [],
   });
   const { data: guardians = [] } = useQuery({ queryKey: ["g-list"], queryFn: async () => (await supabase.from("guardians").select("id, prefix, first_name, last_name, employee_code").order("employee_code")).data ?? [] });
   const { data: children = [] } = useQuery({ queryKey: ["c-list"], queryFn: async () => (await supabase.from("children").select("id, child_name, guardian_id").order("child_name")).data ?? [] });
-  const { data: schools = [] } = useQuery({ queryKey: ["s-list2"], queryFn: async () => (await supabase.from("schools").select("id, school_name, school_type").order("school_name")).data ?? [] });
+  const { data: eduHistory = [] } = useQuery({ queryKey: ["edu-current"], queryFn: async () => (await supabase.from("child_education_history").select("child_id, study_place, education_level, school_type").eq("is_current", true)).data ?? [] });
   const { data: rates = [] } = useQuery({ queryKey: ["rates"], queryFn: async () => (await supabase.from("reimbursement_rates").select("*")).data ?? [] });
 
   const filteredChildren = children.filter((c: any) => !form.guardian_id || c.guardian_id === form.guardian_id);
@@ -62,7 +62,7 @@ function ReimbPage() {
   const openEdit = (r: any) => {
     setEditing(r);
     setForm({
-      academic_year: r.academic_year, guardian_id: r.guardian_id, child_id: r.child_id, school_id: r.school_id || "",
+      academic_year: r.academic_year, guardian_id: r.guardian_id, child_id: r.child_id, study_place: r.study_place || "",
       education_level: r.education_level, school_type: r.school_type, entitled_amount: Number(r.entitled_amount),
       sem1_pay_date: r.sem1_pay_date || "", sem1_doc_no: r.sem1_doc_no || "", sem1_receipt_no: r.sem1_receipt_no || "", sem1_receipt_date: r.sem1_receipt_date || "", sem1_amount: Number(r.sem1_amount),
       sem2_pay_date: r.sem2_pay_date || "", sem2_doc_no: r.sem2_doc_no || "", sem2_receipt_no: r.sem2_receipt_no || "", sem2_receipt_date: r.sem2_receipt_date || "", sem2_amount: Number(r.sem2_amount),
@@ -71,12 +71,24 @@ function ReimbPage() {
     setOpen(true);
   };
 
-  // auto-set entitled & school_type from rates + selected school
-  const updateSchool = (id: string) => {
-    const s = schools.find((x: any) => x.id === id);
-    const st = (s?.school_type as "government" | "private") || form.school_type;
-    const rate = rates.find((r: any) => r.school_type === st && r.education_level === form.education_level && r.academic_year === form.academic_year);
-    setForm({ ...form, school_id: id, school_type: st, entitled_amount: Number(rate?.max_amount || form.entitled_amount) });
+  // auto-fill study place / level / type from the child's current education record
+  const updateChild = (childId: string) => {
+    const edu = eduHistory.find((e: any) => e.child_id === childId);
+    if (!edu) {
+      setForm({ ...form, child_id: childId, study_place: "", entitled_amount: 0 });
+      return;
+    }
+    const lvl = (edu.education_level as typeof EDU_LEVELS[number]) || form.education_level;
+    const st = (edu.school_type as "government" | "private") || form.school_type;
+    const rate = rates.find((r: any) => r.school_type === st && r.education_level === lvl && r.academic_year === form.academic_year);
+    setForm({
+      ...form,
+      child_id: childId,
+      study_place: edu.study_place || "",
+      education_level: lvl,
+      school_type: st,
+      entitled_amount: Number(rate?.max_amount || form.entitled_amount),
+    });
   };
   const updateLevel = (lvl: any) => {
     const rate = rates.find((r: any) => r.school_type === form.school_type && r.education_level === lvl && r.academic_year === form.academic_year);
@@ -85,7 +97,7 @@ function ReimbPage() {
 
   const save = async () => {
     if (!form.guardian_id || !form.child_id) return toast.error("กรุณาเลือกผู้มีสิทธิและบุตร");
-    const payload: any = { ...form, school_id: form.school_id || null };
+    const payload: any = { ...form, school_id: null };
     for (const k of ["sem1_pay_date", "sem1_receipt_date", "sem2_pay_date", "sem2_receipt_date"]) {
       if (!payload[k]) payload[k] = null;
     }
@@ -107,7 +119,7 @@ function ReimbPage() {
   };
 
   const filtered = rows.filter((r: any) => {
-    const t = `${r.registration_no} ${r.guardians?.first_name} ${r.children?.child_name} ${r.schools?.school_name}`.toLowerCase();
+    const t = `${r.registration_no} ${r.guardians?.first_name} ${r.children?.child_name} ${r.study_place ?? ""}`.toLowerCase();
     return t.includes(q.toLowerCase());
   });
 
@@ -175,7 +187,7 @@ function ReimbPage() {
                     <td className="text-center">{r.registration_no}</td>
                     <td>{r.guardians?.prefix}{r.guardians?.first_name} {r.guardians?.last_name}</td>
                     <td>{r.children?.child_name}</td>
-                    <td>{r.schools?.school_name || "-"}</td>
+                    <td>{r.study_place || "-"}</td>
                     <td>{EDU_LEVEL_LABEL[r.education_level]}</td>
                     <td className="text-center">{SCHOOL_TYPE_LABEL[r.school_type]}</td>
                     <td className="text-right">{formatTHB(r.entitled_amount)}</td>
@@ -243,17 +255,16 @@ function ReimbPage() {
             </div>
             <div>
               <Label>บุตร *</Label>
-              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.child_id} onChange={(e) => setForm({ ...form, child_id: e.target.value })}>
+              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.child_id} onChange={(e) => updateChild(e.target.value)}>
                 <option value="">-- เลือก --</option>
                 {filteredChildren.map((c: any) => <option key={c.id} value={c.id}>{c.child_name}</option>)}
               </select>
             </div>
             <div>
-              <Label>โรงเรียนที่ศึกษา</Label>
-              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.school_id} onChange={(e) => updateSchool(e.target.value)}>
-                <option value="">-- เลือก --</option>
-                {schools.map((s: any) => <option key={s.id} value={s.id}>{s.school_name}</option>)}
-              </select>
+              <Label>โรงเรียนที่ศึกษา (ดึงอัตโนมัติจากข้อมูลบุตร)</Label>
+              <div className="flex h-10 w-full items-center rounded-md border bg-muted px-3 text-sm">
+                {form.study_place || (form.child_id ? <span className="text-destructive">บุตรยังไม่มีข้อมูลสถานศึกษาปัจจุบัน</span> : <span className="text-muted-foreground">เลือกบุตรก่อน</span>)}
+              </div>
             </div>
             <div>
               <Label>ระดับชั้น *</Label>
