@@ -29,7 +29,7 @@ type Form = {
 };
 
 const emptyForm: Form = {
-  academic_year: 2569, guardian_id: "", child_id: "", school_id: "",
+  academic_year: 2569, guardian_id: "", child_id: "", study_place: "",
   education_level: "primary", school_type: "government", entitled_amount: 0,
   sem1_pay_date: "", sem1_doc_no: "", sem1_receipt_no: "", sem1_receipt_date: "", sem1_amount: 0,
   sem2_pay_date: "", sem2_doc_no: "", sem2_receipt_no: "", sem2_receipt_date: "", sem2_amount: 0,
