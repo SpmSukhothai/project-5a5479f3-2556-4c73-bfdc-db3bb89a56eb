@@ -255,17 +255,16 @@ function ReimbPage() {
             </div>
             <div>
               <Label>บุตร *</Label>
-              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.child_id} onChange={(e) => setForm({ ...form, child_id: e.target.value })}>
+              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.child_id} onChange={(e) => updateChild(e.target.value)}>
                 <option value="">-- เลือก --</option>
                 {filteredChildren.map((c: any) => <option key={c.id} value={c.id}>{c.child_name}</option>)}
               </select>
             </div>
             <div>
-              <Label>โรงเรียนที่ศึกษา</Label>
-              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.school_id} onChange={(e) => updateSchool(e.target.value)}>
-                <option value="">-- เลือก --</option>
-                {schools.map((s: any) => <option key={s.id} value={s.id}>{s.school_name}</option>)}
-              </select>
+              <Label>โรงเรียนที่ศึกษา (ดึงอัตโนมัติจากข้อมูลบุตร)</Label>
+              <div className="flex h-10 w-full items-center rounded-md border bg-muted px-3 text-sm">
+                {form.study_place || (form.child_id ? <span className="text-destructive">บุตรยังไม่มีข้อมูลสถานศึกษาปัจจุบัน</span> : <span className="text-muted-foreground">เลือกบุตรก่อน</span>)}
+              </div>
             </div>
             <div>
               <Label>ระดับชั้น *</Label>
