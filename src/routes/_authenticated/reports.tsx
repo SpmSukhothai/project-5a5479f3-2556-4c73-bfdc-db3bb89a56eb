@@ -26,7 +26,7 @@ function Reports() {
 
   rows.forEach((r: any) => {
     const used = Number(r.sem1_amount) + Number(r.sem2_amount);
-    const sname = r.schools?.school_name || "ไม่ระบุ";
+    const sname = r.study_place || "ไม่ระบุ";
     if (!bySchool[sname]) bySchool[sname] = { count: 0, amount: 0 };
     bySchool[sname].count++;
     bySchool[sname].amount += used;
