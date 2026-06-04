@@ -15,7 +15,7 @@ function Dashboard() {
       const [guardians, children, reimbs, rates] = await Promise.all([
         supabase.from("guardians").select("id", { count: "exact", head: true }),
         supabase.from("children").select("id", { count: "exact", head: true }),
-        supabase.from("reimbursements").select("*, schools(school_name)").order("created_at", { ascending: false }),
+        supabase.from("reimbursements").select("*").order("created_at", { ascending: false }),
         supabase.from("reimbursement_rates").select("*"),
       ]);
       return {
