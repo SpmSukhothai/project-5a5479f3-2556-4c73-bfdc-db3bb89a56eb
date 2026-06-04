@@ -62,7 +62,7 @@ function ReimbPage() {
   const openEdit = (r: any) => {
     setEditing(r);
     setForm({
-      academic_year: r.academic_year, guardian_id: r.guardian_id, child_id: r.child_id, school_id: r.school_id || "",
+      academic_year: r.academic_year, guardian_id: r.guardian_id, child_id: r.child_id, study_place: r.study_place || "",
       education_level: r.education_level, school_type: r.school_type, entitled_amount: Number(r.entitled_amount),
       sem1_pay_date: r.sem1_pay_date || "", sem1_doc_no: r.sem1_doc_no || "", sem1_receipt_no: r.sem1_receipt_no || "", sem1_receipt_date: r.sem1_receipt_date || "", sem1_amount: Number(r.sem1_amount),
       sem2_pay_date: r.sem2_pay_date || "", sem2_doc_no: r.sem2_doc_no || "", sem2_receipt_no: r.sem2_receipt_no || "", sem2_receipt_date: r.sem2_receipt_date || "", sem2_amount: Number(r.sem2_amount),
@@ -71,12 +71,24 @@ function ReimbPage() {
     setOpen(true);
   };
 
-  // auto-set entitled & school_type from rates + selected school
-  const updateSchool = (id: string) => {
-    const s = schools.find((x: any) => x.id === id);
-    const st = (s?.school_type as "government" | "private") || form.school_type;
-    const rate = rates.find((r: any) => r.school_type === st && r.education_level === form.education_level && r.academic_year === form.academic_year);
-    setForm({ ...form, school_id: id, school_type: st, entitled_amount: Number(rate?.max_amount || form.entitled_amount) });
+  // auto-fill study place / level / type from the child's current education record
+  const updateChild = (childId: string) => {
+    const edu = eduHistory.find((e: any) => e.child_id === childId);
+    if (!edu) {
+      setForm({ ...form, child_id: childId, study_place: "", entitled_amount: 0 });
+      return;
+    }
+    const lvl = (edu.education_level as typeof EDU_LEVELS[number]) || form.education_level;
+    const st = (edu.school_type as "government" | "private") || form.school_type;
+    const rate = rates.find((r: any) => r.school_type === st && r.education_level === lvl && r.academic_year === form.academic_year);
+    setForm({
+      ...form,
+      child_id: childId,
+      study_place: edu.study_place || "",
+      education_level: lvl,
+      school_type: st,
+      entitled_amount: Number(rate?.max_amount || form.entitled_amount),
+    });
   };
   const updateLevel = (lvl: any) => {
     const rate = rates.find((r: any) => r.school_type === form.school_type && r.education_level === lvl && r.academic_year === form.academic_year);
@@ -85,7 +97,7 @@ function ReimbPage() {
 
   const save = async () => {
     if (!form.guardian_id || !form.child_id) return toast.error("กรุณาเลือกผู้มีสิทธิและบุตร");
-    const payload: any = { ...form, school_id: form.school_id || null };
+    const payload: any = { ...form, school_id: null };
     for (const k of ["sem1_pay_date", "sem1_receipt_date", "sem2_pay_date", "sem2_receipt_date"]) {
       if (!payload[k]) payload[k] = null;
     }
