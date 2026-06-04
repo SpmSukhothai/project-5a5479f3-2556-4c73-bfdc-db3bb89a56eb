@@ -15,7 +15,7 @@ function Reports() {
   const { data: rows = [] } = useQuery({
     queryKey: ["reports", year],
     queryFn: async () => (await supabase.from("reimbursements")
-      .select("*, guardians(prefix,first_name,last_name,employee_code), children(child_name), schools(school_name,school_type)")
+      .select("*, guardians(prefix,first_name,last_name,employee_code), children(child_name)")
       .eq("academic_year", year)).data ?? [],
   });
 
