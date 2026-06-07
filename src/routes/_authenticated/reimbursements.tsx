@@ -11,6 +11,7 @@ import { Plus, Search, Printer, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { EDU_LEVEL_LABEL, EDU_LEVELS, SCHOOL_TYPE_LABEL, formatTHB, formatThaiDate, ORG_NAME } from "@/lib/labels";
 import { useAuth } from "@/hooks/use-auth";
+import { ThaiDatePicker } from "@/components/ThaiDatePicker";
 
 export const Route = createFileRoute("/_authenticated/reimbursements")({ component: ReimbPage });
 
@@ -283,10 +284,10 @@ function ReimbPage() {
             <div className="col-span-2 mt-2 rounded-md border bg-muted/50 p-3">
               <div className="mb-2 font-semibold">ภาคเรียนที่ 1</div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>วันที่จ่ายเงิน</Label><Input type="date" value={form.sem1_pay_date} onChange={(e) => setForm({ ...form, sem1_pay_date: e.target.value })} /></div>
+                <div><Label>วันที่จ่ายเงิน</Label><ThaiDatePicker value={form.sem1_pay_date} onChange={(v) => setForm({ ...form, sem1_pay_date: v })} /></div>
                 <div><Label>เลขที่เอกสารจ่ายเงิน</Label><Input value={form.sem1_doc_no} onChange={(e) => setForm({ ...form, sem1_doc_no: e.target.value })} /></div>
                 <div><Label>เลขที่ใบเสร็จ</Label><Input value={form.sem1_receipt_no} onChange={(e) => setForm({ ...form, sem1_receipt_no: e.target.value })} /></div>
-                <div><Label>วันที่ใบเสร็จ</Label><Input type="date" value={form.sem1_receipt_date} onChange={(e) => setForm({ ...form, sem1_receipt_date: e.target.value })} /></div>
+                <div><Label>วันที่ใบเสร็จ</Label><ThaiDatePicker value={form.sem1_receipt_date} onChange={(v) => setForm({ ...form, sem1_receipt_date: v })} /></div>
                 <div className="col-span-2"><Label>จำนวนเงิน (บาท)</Label><Input type="number" value={form.sem1_amount} onChange={(e) => setForm({ ...form, sem1_amount: Number(e.target.value) })} /></div>
               </div>
             </div>
@@ -294,10 +295,10 @@ function ReimbPage() {
             <div className="col-span-2 rounded-md border bg-muted/50 p-3">
               <div className="mb-2 font-semibold">ภาคเรียนที่ 2</div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>วันที่จ่ายเงิน</Label><Input type="date" value={form.sem2_pay_date} onChange={(e) => setForm({ ...form, sem2_pay_date: e.target.value })} /></div>
+                <div><Label>วันที่จ่ายเงิน</Label><ThaiDatePicker value={form.sem2_pay_date} onChange={(v) => setForm({ ...form, sem2_pay_date: v })} /></div>
                 <div><Label>เลขที่เอกสารจ่ายเงิน</Label><Input value={form.sem2_doc_no} onChange={(e) => setForm({ ...form, sem2_doc_no: e.target.value })} /></div>
                 <div><Label>เลขที่ใบเสร็จ</Label><Input value={form.sem2_receipt_no} onChange={(e) => setForm({ ...form, sem2_receipt_no: e.target.value })} /></div>
-                <div><Label>วันที่ใบเสร็จ</Label><Input type="date" value={form.sem2_receipt_date} onChange={(e) => setForm({ ...form, sem2_receipt_date: e.target.value })} /></div>
+                <div><Label>วันที่ใบเสร็จ</Label><ThaiDatePicker value={form.sem2_receipt_date} onChange={(v) => setForm({ ...form, sem2_receipt_date: v })} /></div>
                 <div className="col-span-2"><Label>จำนวนเงิน (บาท)</Label><Input type="number" value={form.sem2_amount} onChange={(e) => setForm({ ...form, sem2_amount: Number(e.target.value) })} /></div>
               </div>
             </div>
