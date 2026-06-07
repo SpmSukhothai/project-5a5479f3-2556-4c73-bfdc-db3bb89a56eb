@@ -54,6 +54,8 @@ function SchoolsPage() {
     qc.invalidateQueries({ queryKey: ["schools"] });
   };
 
+  if (role && role !== "admin") return <Navigate to="/dashboard" />;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
