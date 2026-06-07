@@ -111,17 +111,6 @@ function SchoolsPage() {
           <div className="space-y-3">
             <div><Label>รหัสโรงเรียน</Label><Input value={form.school_code} onChange={(e) => setForm({ ...form, school_code: e.target.value })} /></div>
             <div><Label>ชื่อโรงเรียน</Label><Input value={form.school_name} onChange={(e) => setForm({ ...form, school_name: e.target.value })} /></div>
-            <div>
-              <Label>ประเภท</Label>
-              <Select value={form.school_type} onValueChange={(v) => setForm({ ...form, school_type: v as "government" | "private" })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="government">ราชการ</SelectItem>
-                  <SelectItem value="private">เอกชน</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div><Label>จังหวัด</Label><Input value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>ยกเลิก</Button>
