@@ -80,8 +80,6 @@ function SchoolsPage() {
                 <th style={{ width: 60 }}>ลำดับ</th>
                 <th>รหัสโรงเรียน</th>
                 <th>ชื่อโรงเรียน</th>
-                <th>ประเภท</th>
-                <th>จังหวัด</th>
                 {role === "admin" && <th style={{ width: 120 }}>จัดการ</th>}
               </tr>
             </thead>
@@ -91,8 +89,6 @@ function SchoolsPage() {
                   <td className="text-center">{i + 1}</td>
                   <td>{s.school_code}</td>
                   <td>{s.school_name}</td>
-                  <td>{SCHOOL_TYPE_LABEL[s.school_type]}</td>
-                  <td>{s.province}</td>
                   {role === "admin" && (
                     <td>
                       <div className="flex gap-1">
