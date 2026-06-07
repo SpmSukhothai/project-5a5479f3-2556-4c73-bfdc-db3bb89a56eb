@@ -11,6 +11,7 @@ import { Plus, Search, Printer, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { EDU_LEVEL_LABEL, EDU_LEVELS, SCHOOL_TYPE_LABEL, formatTHB, formatThaiDate, ORG_NAME } from "@/lib/labels";
 import { useAuth } from "@/hooks/use-auth";
+import { ThaiDatePicker } from "@/components/ThaiDatePicker";
 
 export const Route = createFileRoute("/_authenticated/reimbursements")({ component: ReimbPage });
 
