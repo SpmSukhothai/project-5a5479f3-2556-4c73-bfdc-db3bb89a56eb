@@ -99,7 +99,7 @@ function SchoolsPage() {
                   )}
                 </tr>
               ))}
-              {filtered.length === 0 && <tr><td colSpan={6} className="text-center text-muted-foreground">ไม่พบข้อมูล</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={4} className="text-center text-muted-foreground">ไม่พบข้อมูล</td></tr>}
             </tbody>
           </table>
         </div>
