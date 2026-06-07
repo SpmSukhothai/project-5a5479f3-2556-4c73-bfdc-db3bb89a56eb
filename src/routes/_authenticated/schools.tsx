@@ -19,7 +19,7 @@ function SchoolsPage() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState<{ school_code: string; school_name: string; school_type: "government" | "private"; province: string }>({ school_code: "", school_name: "", school_type: "government", province: "สุโขทัย" });
+  const [form, setForm] = useState<{ school_code: string; school_name: string }>({ school_code: "", school_name: "" });
 
   const { data: schools = [] } = useQuery({
     queryKey: ["schools"],
@@ -30,8 +30,8 @@ function SchoolsPage() {
     s.school_name.toLowerCase().includes(q.toLowerCase()) || s.school_code.toLowerCase().includes(q.toLowerCase())
   );
 
-  const openNew = () => { setEditing(null); setForm({ school_code: "", school_name: "", school_type: "government", province: "สุโขทัย" }); setOpen(true); };
-  const openEdit = (s: any) => { setEditing(s); setForm(s); setOpen(true); };
+  const openNew = () => { setEditing(null); setForm({ school_code: "", school_name: "" }); setOpen(true); };
+  const openEdit = (s: any) => { setEditing(s); setForm({ school_code: s.school_code, school_name: s.school_name }); setOpen(true); };
 
   const save = async () => {
     const payload = { ...form };
