@@ -284,7 +284,7 @@ function ReimbPage() {
             <div className="col-span-2 mt-2 rounded-md border bg-muted/50 p-3">
               <div className="mb-2 font-semibold">ภาคเรียนที่ 1</div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>วันที่จ่ายเงิน</Label><Input type="date" value={form.sem1_pay_date} onChange={(e) => setForm({ ...form, sem1_pay_date: e.target.value })} /></div>
+                <div><Label>วันที่จ่ายเงิน</Label><ThaiDatePicker value={form.sem1_pay_date} onChange={(v) => setForm({ ...form, sem1_pay_date: v })} /></div>
                 <div><Label>เลขที่เอกสารจ่ายเงิน</Label><Input value={form.sem1_doc_no} onChange={(e) => setForm({ ...form, sem1_doc_no: e.target.value })} /></div>
                 <div><Label>เลขที่ใบเสร็จ</Label><Input value={form.sem1_receipt_no} onChange={(e) => setForm({ ...form, sem1_receipt_no: e.target.value })} /></div>
                 <div><Label>วันที่ใบเสร็จ</Label><Input type="date" value={form.sem1_receipt_date} onChange={(e) => setForm({ ...form, sem1_receipt_date: e.target.value })} /></div>
