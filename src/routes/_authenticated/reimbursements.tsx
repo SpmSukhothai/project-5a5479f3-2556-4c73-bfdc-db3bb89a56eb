@@ -163,7 +163,7 @@ function ReimbPage() {
                 <th rowSpan={2}>เลขทะเบียน</th>
                 <th rowSpan={2}>ผู้มีสิทธิ</th>
                 <th rowSpan={2}>ชื่อบุตร</th>
-                <th rowSpan={2}>โรงเรียน</th>
+                <th rowSpan={2}>สถานศึกษา</th>
                 <th rowSpan={2}>ระดับชั้น</th>
                 <th rowSpan={2}>ประเภท</th>
                 <th rowSpan={2}>สิทธิ (บาท)</th>
@@ -174,8 +174,8 @@ function ReimbPage() {
                 <th rowSpan={2} className="no-print">จัดการ</th>
               </tr>
               <tr>
-                <th>วันที่จ่าย/ใบเสร็จ</th><th>เลขเอกสาร/ใบเสร็จ</th><th>จำนวนเงิน</th>
-                <th>วันที่จ่าย/ใบเสร็จ</th><th>เลขเอกสาร/ใบเสร็จ</th><th>จำนวนเงิน</th>
+                <th>วันที่จ่าย</th><th>เลขเอกสาร/ใบเสร็จ</th><th>จำนวนเงิน</th>
+                <th>วันที่จ่าย</th><th>เลขเอกสาร/ใบเสร็จ</th><th>จำนวนเงิน</th>
               </tr>
             </thead>
             <tbody>
@@ -191,11 +191,11 @@ function ReimbPage() {
                     <td>{EDU_LEVEL_LABEL[r.education_level]}</td>
                     <td className="text-center">{SCHOOL_TYPE_LABEL[r.school_type]}</td>
                     <td className="text-right">{formatTHB(r.entitled_amount)}</td>
-                    <td className="text-xs">จ่าย: {formatThaiDate(r.sem1_pay_date)}<br/>ใบเสร็จ: {formatThaiDate(r.sem1_receipt_date)}</td>
-                    <td className="text-xs">{r.sem1_doc_no || "-"}<br/>{r.sem1_receipt_no || "-"}</td>
+                    <td className="text-xs">จ่าย: {formatThaiDate(r.sem1_pay_date)}</td>
+                    <td className="text-xs">{r.sem1_doc_no || "-"}<br/>{r.sem1_receipt_no || "-"}<br/>{formatThaiDate(r.sem1_receipt_date)}</td>
                     <td className="text-right">{formatTHB(r.sem1_amount)}</td>
-                    <td className="text-xs">จ่าย: {formatThaiDate(r.sem2_pay_date)}<br/>ใบเสร็จ: {formatThaiDate(r.sem2_receipt_date)}</td>
-                    <td className="text-xs">{r.sem2_doc_no || "-"}<br/>{r.sem2_receipt_no || "-"}</td>
+                    <td className="text-xs">จ่าย: {formatThaiDate(r.sem2_pay_date)}</td>
+                    <td className="text-xs">{r.sem2_doc_no || "-"}<br/>{r.sem2_receipt_no || "-"}<br/>ใบเสร็จ: {formatThaiDate(r.sem2_receipt_date)}</td>
                     <td className="text-right">{formatTHB(r.sem2_amount)}</td>
                     <td className="text-right font-semibold">{formatTHB(rem)}</td>
                     <td>{r.remark || "-"}</td>
