@@ -11,7 +11,7 @@ const nav = [
   { to: "/reimbursements", label: "ทะเบียนคุมการเบิก", icon: BookOpen },
   { to: "/guardians", label: "ผู้มีสิทธิ", icon: Users },
   { to: "/children", label: "บุตรผู้ใช้สิทธิ", icon: Baby },
-  { to: "/schools", label: "โรงเรียน", icon: School },
+  { to: "/schools", label: "โรงเรียน", icon: School, adminOnly: true },
   { to: "/reports", label: "รายงาน", icon: FileBarChart },
   { to: "/settings", label: "ตั้งค่า", icon: Settings, adminOnly: true },
 ];
