@@ -34,7 +34,9 @@ function SchoolsPage() {
   const openEdit = (s: any) => { setEditing(s); setForm({ school_code: s.school_code, school_name: s.school_name }); setOpen(true); };
 
   const save = async () => {
-    const payload = { ...form };
+    const payload = editing
+      ? { ...form }
+      : { ...form, school_type: "government" as const, province: "สุโขทัย" };
     const res = editing
       ? await supabase.from("schools").update(payload).eq("id", editing.id)
       : await supabase.from("schools").insert(payload);
