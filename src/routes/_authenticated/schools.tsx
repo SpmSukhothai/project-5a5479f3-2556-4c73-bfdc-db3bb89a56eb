@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,9 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pencil, Trash2, Plus, Search } from "lucide-react";
-import { SCHOOL_TYPE_LABEL } from "@/lib/labels";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -21,7 +19,7 @@ function SchoolsPage() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState<{ school_code: string; school_name: string; school_type: "government" | "private"; province: string }>({ school_code: "", school_name: "", school_type: "government", province: "สุโขทัย" });
+  const [form, setForm] = useState<{ school_code: string; school_name: string }>({ school_code: "", school_name: "" });
 
   const { data: schools = [] } = useQuery({
     queryKey: ["schools"],
@@ -32,11 +30,13 @@ function SchoolsPage() {
     s.school_name.toLowerCase().includes(q.toLowerCase()) || s.school_code.toLowerCase().includes(q.toLowerCase())
   );
 
-  const openNew = () => { setEditing(null); setForm({ school_code: "", school_name: "", school_type: "government", province: "สุโขทัย" }); setOpen(true); };
-  const openEdit = (s: any) => { setEditing(s); setForm(s); setOpen(true); };
+  const openNew = () => { setEditing(null); setForm({ school_code: "", school_name: "" }); setOpen(true); };
+  const openEdit = (s: any) => { setEditing(s); setForm({ school_code: s.school_code, school_name: s.school_name }); setOpen(true); };
 
   const save = async () => {
-    const payload = { ...form };
+    const payload = editing
+      ? { ...form }
+      : { ...form, school_type: "government" as const, province: "สุโขทัย" };
     const res = editing
       ? await supabase.from("schools").update(payload).eq("id", editing.id)
       : await supabase.from("schools").insert(payload);
@@ -53,6 +53,8 @@ function SchoolsPage() {
     toast.success("ลบสำเร็จ");
     qc.invalidateQueries({ queryKey: ["schools"] });
   };
+
+  if (role && role !== "admin") return <Navigate to="/dashboard" />;
 
   return (
     <div className="space-y-4">
@@ -78,8 +80,6 @@ function SchoolsPage() {
                 <th style={{ width: 60 }}>ลำดับ</th>
                 <th>รหัสโรงเรียน</th>
                 <th>ชื่อโรงเรียน</th>
-                <th>ประเภท</th>
-                <th>จังหวัด</th>
                 {role === "admin" && <th style={{ width: 120 }}>จัดการ</th>}
               </tr>
             </thead>
@@ -89,8 +89,6 @@ function SchoolsPage() {
                   <td className="text-center">{i + 1}</td>
                   <td>{s.school_code}</td>
                   <td>{s.school_name}</td>
-                  <td>{SCHOOL_TYPE_LABEL[s.school_type]}</td>
-                  <td>{s.province}</td>
                   {role === "admin" && (
                     <td>
                       <div className="flex gap-1">
@@ -101,7 +99,7 @@ function SchoolsPage() {
                   )}
                 </tr>
               ))}
-              {filtered.length === 0 && <tr><td colSpan={6} className="text-center text-muted-foreground">ไม่พบข้อมูล</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={4} className="text-center text-muted-foreground">ไม่พบข้อมูล</td></tr>}
             </tbody>
           </table>
         </div>
@@ -113,17 +111,6 @@ function SchoolsPage() {
           <div className="space-y-3">
             <div><Label>รหัสโรงเรียน</Label><Input value={form.school_code} onChange={(e) => setForm({ ...form, school_code: e.target.value })} /></div>
             <div><Label>ชื่อโรงเรียน</Label><Input value={form.school_name} onChange={(e) => setForm({ ...form, school_name: e.target.value })} /></div>
-            <div>
-              <Label>ประเภท</Label>
-              <Select value={form.school_type} onValueChange={(v) => setForm({ ...form, school_type: v as "government" | "private" })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="government">ราชการ</SelectItem>
-                  <SelectItem value="private">เอกชน</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div><Label>จังหวัด</Label><Input value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>ยกเลิก</Button>
