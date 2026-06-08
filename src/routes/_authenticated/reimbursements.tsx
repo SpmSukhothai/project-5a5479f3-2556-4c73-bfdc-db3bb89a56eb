@@ -347,7 +347,7 @@ function ReimbPage() {
                 <div><Label>เลขที่เอกสารจ่ายเงิน</Label><Input value={form.sem2_doc_no} onChange={(e) => setForm({ ...form, sem2_doc_no: e.target.value })} /></div>
                 <div><Label>เลขที่ใบเสร็จ</Label><Input value={form.sem2_receipt_no} onChange={(e) => setForm({ ...form, sem2_receipt_no: e.target.value })} /></div>
                 <div><Label>วันที่ใบเสร็จ</Label><ThaiDatePicker value={form.sem2_receipt_date} onChange={(v) => setForm({ ...form, sem2_receipt_date: v })} /></div>
-                <div className="col-span-2"><Label>จำนวนเงิน (บาท)</Label><Input type="number" value={form.sem2_amount} onChange={(e) => setForm({ ...form, sem2_amount: Number(e.target.value) })} /></div>
+                <div className="col-span-2"><Label>จำนวนเงิน (บาท)</Label><Input type="number" value={form.sem2_amount} onChange={(e) => setAmount("sem2_amount", Number(e.target.value))} /></div>
               </div>
             </div>
 
