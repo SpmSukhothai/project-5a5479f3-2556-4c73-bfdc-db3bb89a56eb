@@ -11,12 +11,12 @@ import { Pencil, Trash2, Plus, Search, History } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatThaiDate, EDU_LEVELS, EDU_LEVEL_LABEL, SCHOOL_TYPE_LABEL } from "@/lib/labels";
+import { formatThaiDate, EDU_LEVELS, EDU_LEVEL_LABEL, SCHOOL_TYPE_LABEL, SUBSIDY_TYPE_LABEL, SUBSIDY_TYPES, isVocational } from "@/lib/labels";
 import { ThaiDatePicker } from "@/components/ThaiDatePicker";
 
 export const Route = createFileRoute("/_authenticated/children")({ component: ChildrenPage });
 
-const emptyForm = { guardian_id: "", child_name: "", birth_date: "", study_place: "", education_level: "", school_type: "government", is_active: true };
+const emptyForm = { guardian_id: "", child_name: "", birth_date: "", study_place: "", education_level: "", school_type: "government", subsidy_type: "none", program_group_id: "", is_active: true };
 
 function ChildrenPage() {
   const { role } = useAuth();
@@ -28,6 +28,7 @@ function ChildrenPage() {
   const [histFor, setHistFor] = useState<any>(null);
 
   const { data: guardians = [] } = useQuery({ queryKey: ["guardians-list"], queryFn: async () => (await supabase.from("guardians").select("id, prefix, first_name, last_name, employee_code").order("employee_code")).data ?? [] });
+  const { data: programGroups = [] } = useQuery({ queryKey: ["program-groups"], queryFn: async () => (await supabase.from("program_groups").select("*").eq("active", true).order("name")).data ?? [] });
   const { data: rows = [] } = useQuery({
     queryKey: ["children"],
     queryFn: async () => (await supabase.from("children").select("*, guardians(prefix, first_name, last_name, employee_code, schools(school_name))").order("created_at", { ascending: false })).data ?? [],
@@ -36,12 +37,18 @@ function ChildrenPage() {
   const filtered = rows.filter((r: any) => `${r.child_name} ${r.guardians?.first_name || ""}`.toLowerCase().includes(q.toLowerCase()));
 
   const openNew = () => { setEditing(null); setForm({ ...emptyForm }); setOpen(true); };
-  const openEdit = (r: any) => { setEditing(r); setForm({ ...emptyForm, ...r, study_place: r.study_place ?? "", education_level: r.education_level ?? "" }); setOpen(true); };
+  const openEdit = (r: any) => { setEditing(r); setForm({ ...emptyForm, ...r, study_place: r.study_place ?? "", education_level: r.education_level ?? "", subsidy_type: r.subsidy_type ?? "none", program_group_id: r.program_group_id ?? "" }); setOpen(true); };
 
   const save = async () => {
     if (!form.guardian_id) return toast.error("กรุณาเลือกผู้มีสิทธิ");
+    const voc = isVocational(form.education_level);
+    if (voc && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาต้องเลือกกลุ่มสาขาวิชา");
     const { guardians, ...rest } = form;
-    const payload = { ...rest, education_level: form.education_level || null };
+    const payload = {
+      ...rest,
+      education_level: form.education_level || null,
+      program_group_id: voc ? form.program_group_id || null : null,
+    };
     const res = editing
       ? await supabase.from("children").update(payload).eq("id", editing.id)
       : await supabase.from("children").insert(payload).select("id").single();
@@ -51,7 +58,8 @@ function ChildrenPage() {
       const newId = (res as any).data?.id;
       if (newId) {
         await supabase.from("child_education_history").insert({
-          child_id: newId, study_place: payload.study_place, education_level: payload.education_level, school_type: payload.school_type, is_current: true,
+          child_id: newId, study_place: payload.study_place, education_level: payload.education_level, school_type: payload.school_type,
+          subsidy_type: payload.subsidy_type, program_group_id: payload.program_group_id, is_current: true,
         });
       }
     }
@@ -148,7 +156,7 @@ function ChildrenPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>ระดับชั้นที่กำลังศึกษา</Label>
-                <Select value={form.education_level} onValueChange={(v) => setForm({ ...form, education_level: v })}>
+                <Select value={form.education_level} onValueChange={(v) => setForm({ ...form, education_level: v, program_group_id: isVocational(v) ? form.program_group_id : "" })}>
                   <SelectTrigger><SelectValue placeholder="-- เลือก --" /></SelectTrigger>
                   <SelectContent>{EDU_LEVELS.map((lv) => <SelectItem key={lv} value={lv}>{EDU_LEVEL_LABEL[lv]}</SelectItem>)}</SelectContent>
                 </Select>
@@ -160,7 +168,24 @@ function ChildrenPage() {
                   <SelectContent>{Object.entries(SCHOOL_TYPE_LABEL).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label>เงินอุดหนุน</Label>
+                <Select value={form.subsidy_type} onValueChange={(v) => setForm({ ...form, subsidy_type: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{SUBSIDY_TYPES.map((k) => <SelectItem key={k} value={k}>{SUBSIDY_TYPE_LABEL[k]}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              {isVocational(form.education_level) && (
+                <div>
+                  <Label>กลุ่มสาขาวิชา *</Label>
+                  <Select value={form.program_group_id} onValueChange={(v) => setForm({ ...form, program_group_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="-- เลือก --" /></SelectTrigger>
+                    <SelectContent>{programGroups.map((g: any) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
+
             {editing && <p className="text-xs text-muted-foreground">หากบุตรเปลี่ยนสถานศึกษา/ระดับชั้น กรุณาใช้ปุ่ม "ประวัติ/เปลี่ยนสถานศึกษา" เพื่อเก็บประวัติย้อนหลัง</p>}
           </div>
           <DialogFooter>
@@ -181,6 +206,8 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
   const [studyPlace, setStudyPlace] = useState("");
   const [level, setLevel] = useState("");
   const [schoolType, setSchoolType] = useState("government");
+  const [subsidyType, setSubsidyType] = useState("none");
+  const [programGroupId, setProgramGroupId] = useState("");
   const [academicYear, setAcademicYear] = useState("");
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
 
@@ -188,18 +215,23 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
     queryKey: ["education-history", child.id],
     queryFn: async () => (await supabase.from("child_education_history").select("*").eq("child_id", child.id).order("start_date", { ascending: false })).data ?? [],
   });
+  const { data: programGroups = [] } = useQuery({ queryKey: ["program-groups"], queryFn: async () => (await supabase.from("program_groups").select("*").eq("active", true).order("name")).data ?? [] });
 
   const submit = async () => {
     if (!studyPlace.trim()) return toast.error("กรุณากรอกสถานศึกษา");
+    const voc = isVocational(level);
+    if (voc && !programGroupId) return toast.error("ระดับอาชีวศึกษาต้องเลือกกลุ่มสาขาวิชา");
+    const pg = voc ? programGroupId || null : null;
     const { error } = await supabase.from("child_education_history").insert({
       child_id: child.id, study_place: studyPlace.trim(), education_level: (level || null) as any, school_type: schoolType as any,
+      subsidy_type: subsidyType as any, program_group_id: pg,
       academic_year: academicYear ? Number(academicYear) : null, start_date: startDate, is_current: true,
     });
     if (error) return toast.error("บันทึกไม่สำเร็จ", { description: error.message });
-    const { error: e2 } = await supabase.from("children").update({ study_place: studyPlace.trim(), education_level: (level || null) as any, school_type: schoolType as any }).eq("id", child.id);
+    const { error: e2 } = await supabase.from("children").update({ study_place: studyPlace.trim(), education_level: (level || null) as any, school_type: schoolType as any, subsidy_type: subsidyType as any, program_group_id: pg }).eq("id", child.id);
     if (e2) return toast.error("อัปเดตข้อมูลปัจจุบันไม่สำเร็จ", { description: e2.message });
     toast.success("บันทึกการเปลี่ยนสถานศึกษาสำเร็จ");
-    setAdding(false); setStudyPlace(""); setLevel(""); setSchoolType("government"); setAcademicYear("");
+    setAdding(false); setStudyPlace(""); setLevel(""); setSchoolType("government"); setSubsidyType("none"); setProgramGroupId(""); setAcademicYear("");
     qc.invalidateQueries({ queryKey: ["education-history", child.id] });
     qc.invalidateQueries({ queryKey: ["children"] });
   };
@@ -229,7 +261,7 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>ระดับชั้น</Label>
-                <Select value={level} onValueChange={setLevel}>
+                <Select value={level} onValueChange={(v) => { setLevel(v); if (!isVocational(v)) setProgramGroupId(""); }}>
                   <SelectTrigger><SelectValue placeholder="-- เลือก --" /></SelectTrigger>
                   <SelectContent>{EDU_LEVELS.map((lv) => <SelectItem key={lv} value={lv}>{EDU_LEVEL_LABEL[lv]}</SelectItem>)}</SelectContent>
                 </Select>
@@ -241,7 +273,24 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
                   <SelectContent>{Object.entries(SCHOOL_TYPE_LABEL).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label>เงินอุดหนุน</Label>
+                <Select value={subsidyType} onValueChange={setSubsidyType}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{SUBSIDY_TYPES.map((k) => <SelectItem key={k} value={k}>{SUBSIDY_TYPE_LABEL[k]}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              {isVocational(level) && (
+                <div>
+                  <Label>กลุ่มสาขาวิชา *</Label>
+                  <Select value={programGroupId} onValueChange={setProgramGroupId}>
+                    <SelectTrigger><SelectValue placeholder="-- เลือก --" /></SelectTrigger>
+                    <SelectContent>{programGroups.map((g: any) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div><Label>ปีการศึกษา</Label><Input type="number" placeholder="เช่น 2568" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} /></div>
               <div><Label>วันที่มีผล</Label><Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>

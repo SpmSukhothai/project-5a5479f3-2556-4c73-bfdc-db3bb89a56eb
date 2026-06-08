@@ -53,9 +53,11 @@ export type Database = {
           end_date: string | null
           id: string
           is_current: boolean
+          program_group_id: string | null
           school_type: Database["public"]["Enums"]["school_type"]
           start_date: string
           study_place: string
+          subsidy_type: Database["public"]["Enums"]["subsidy_type"]
           updated_at: string
         }
         Insert: {
@@ -68,9 +70,11 @@ export type Database = {
           end_date?: string | null
           id?: string
           is_current?: boolean
+          program_group_id?: string | null
           school_type?: Database["public"]["Enums"]["school_type"]
           start_date?: string
           study_place: string
+          subsidy_type?: Database["public"]["Enums"]["subsidy_type"]
           updated_at?: string
         }
         Update: {
@@ -83,9 +87,11 @@ export type Database = {
           end_date?: string | null
           id?: string
           is_current?: boolean
+          program_group_id?: string | null
           school_type?: Database["public"]["Enums"]["school_type"]
           start_date?: string
           study_place?: string
+          subsidy_type?: Database["public"]["Enums"]["subsidy_type"]
           updated_at?: string
         }
         Relationships: [
@@ -94,6 +100,13 @@ export type Database = {
             columns: ["child_id"]
             isOneToOne: false
             referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "child_education_history_program_group_id_fkey"
+            columns: ["program_group_id"]
+            isOneToOne: false
+            referencedRelation: "program_groups"
             referencedColumns: ["id"]
           },
         ]
@@ -107,8 +120,10 @@ export type Database = {
           guardian_id: string
           id: string
           is_active: boolean
+          program_group_id: string | null
           school_type: Database["public"]["Enums"]["school_type"]
           study_place: string | null
+          subsidy_type: Database["public"]["Enums"]["subsidy_type"]
           updated_at: string
         }
         Insert: {
@@ -121,8 +136,10 @@ export type Database = {
           guardian_id: string
           id?: string
           is_active?: boolean
+          program_group_id?: string | null
           school_type?: Database["public"]["Enums"]["school_type"]
           study_place?: string | null
+          subsidy_type?: Database["public"]["Enums"]["subsidy_type"]
           updated_at?: string
         }
         Update: {
@@ -135,8 +152,10 @@ export type Database = {
           guardian_id?: string
           id?: string
           is_active?: boolean
+          program_group_id?: string | null
           school_type?: Database["public"]["Enums"]["school_type"]
           study_place?: string | null
+          subsidy_type?: Database["public"]["Enums"]["subsidy_type"]
           updated_at?: string
         }
         Relationships: [
@@ -145,6 +164,13 @@ export type Database = {
             columns: ["guardian_id"]
             isOneToOne: false
             referencedRelation: "guardians"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "children_program_group_id_fkey"
+            columns: ["program_group_id"]
+            isOneToOne: false
+            referencedRelation: "program_groups"
             referencedColumns: ["id"]
           },
         ]
@@ -274,6 +300,33 @@ export type Database = {
         }
         Relationships: []
       }
+      program_groups: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reimbursement_rates: {
         Row: {
           academic_year: number
@@ -281,7 +334,11 @@ export type Database = {
           education_level: Database["public"]["Enums"]["education_level"]
           id: string
           max_amount: number
+          program_group_id: string | null
+          reimbursement_percent: number | null
+          reimbursement_type: Database["public"]["Enums"]["reimbursement_type"]
           school_type: Database["public"]["Enums"]["school_type"]
+          subsidy_type: Database["public"]["Enums"]["subsidy_type"]
         }
         Insert: {
           academic_year?: number
@@ -289,7 +346,11 @@ export type Database = {
           education_level: Database["public"]["Enums"]["education_level"]
           id?: string
           max_amount: number
+          program_group_id?: string | null
+          reimbursement_percent?: number | null
+          reimbursement_type?: Database["public"]["Enums"]["reimbursement_type"]
           school_type: Database["public"]["Enums"]["school_type"]
+          subsidy_type?: Database["public"]["Enums"]["subsidy_type"]
         }
         Update: {
           academic_year?: number
@@ -297,9 +358,21 @@ export type Database = {
           education_level?: Database["public"]["Enums"]["education_level"]
           id?: string
           max_amount?: number
+          program_group_id?: string | null
+          reimbursement_percent?: number | null
+          reimbursement_type?: Database["public"]["Enums"]["reimbursement_type"]
           school_type?: Database["public"]["Enums"]["school_type"]
+          subsidy_type?: Database["public"]["Enums"]["subsidy_type"]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "reimbursement_rates_program_group_id_fkey"
+            columns: ["program_group_id"]
+            isOneToOne: false
+            referencedRelation: "program_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reimbursements: {
         Row: {
@@ -311,7 +384,10 @@ export type Database = {
           entitled_amount: number
           guardian_id: string
           id: string
+          program_group_id: string | null
           registration_no: string
+          reimbursement_percent: number | null
+          reimbursement_type: Database["public"]["Enums"]["reimbursement_type"]
           remark: string | null
           school_id: string | null
           school_type: Database["public"]["Enums"]["school_type"]
@@ -326,6 +402,7 @@ export type Database = {
           sem2_receipt_date: string | null
           sem2_receipt_no: string | null
           study_place: string | null
+          subsidy_type: Database["public"]["Enums"]["subsidy_type"]
           updated_at: string
         }
         Insert: {
@@ -337,7 +414,10 @@ export type Database = {
           entitled_amount?: number
           guardian_id: string
           id?: string
+          program_group_id?: string | null
           registration_no: string
+          reimbursement_percent?: number | null
+          reimbursement_type?: Database["public"]["Enums"]["reimbursement_type"]
           remark?: string | null
           school_id?: string | null
           school_type: Database["public"]["Enums"]["school_type"]
@@ -352,6 +432,7 @@ export type Database = {
           sem2_receipt_date?: string | null
           sem2_receipt_no?: string | null
           study_place?: string | null
+          subsidy_type?: Database["public"]["Enums"]["subsidy_type"]
           updated_at?: string
         }
         Update: {
@@ -363,7 +444,10 @@ export type Database = {
           entitled_amount?: number
           guardian_id?: string
           id?: string
+          program_group_id?: string | null
           registration_no?: string
+          reimbursement_percent?: number | null
+          reimbursement_type?: Database["public"]["Enums"]["reimbursement_type"]
           remark?: string | null
           school_id?: string | null
           school_type?: Database["public"]["Enums"]["school_type"]
@@ -378,6 +462,7 @@ export type Database = {
           sem2_receipt_date?: string | null
           sem2_receipt_no?: string | null
           study_place?: string | null
+          subsidy_type?: Database["public"]["Enums"]["subsidy_type"]
           updated_at?: string
         }
         Relationships: [
@@ -393,6 +478,13 @@ export type Database = {
             columns: ["guardian_id"]
             isOneToOne: false
             referencedRelation: "guardians"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reimbursements_program_group_id_fkey"
+            columns: ["program_group_id"]
+            isOneToOne: false
+            referencedRelation: "program_groups"
             referencedColumns: ["id"]
           },
           {
@@ -478,7 +570,11 @@ export type Database = {
         | "upper_secondary"
         | "vocational"
         | "bachelor"
+        | "vocational_certificate"
+        | "higher_vocational"
+      reimbursement_type: "fixed_amount" | "half_of_actual" | "percentage"
       school_type: "government" | "private"
+      subsidy_type: "subsidized" | "non_subsidized" | "none"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -614,8 +710,12 @@ export const Constants = {
         "upper_secondary",
         "vocational",
         "bachelor",
+        "vocational_certificate",
+        "higher_vocational",
       ],
+      reimbursement_type: ["fixed_amount", "half_of_actual", "percentage"],
       school_type: ["government", "private"],
+      subsidy_type: ["subsidized", "non_subsidized", "none"],
     },
   },
 } as const

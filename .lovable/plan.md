@@ -1,69 +1,65 @@
 ## เป้าหมาย
-ปรับ logic การคำนวณอัตราค่าการศึกษาบุตรให้รองรับกลุ่มสาขาวิชา (อาชีวศึกษา), ประเภทการรับเงินอุดหนุน และรูปแบบการเบิกหลายแบบ โดยใช้ตารางอ้างอิงแยก (มี id) และผูกกับข้อมูลบุตร
+ขยายระบบอัตราการเบิก (`reimbursement_rates`) ให้รองรับอาชีวศึกษาที่อัตราต่างกันตาม "กลุ่มสาขาวิชา" รวมถึงประเภทการรับเงินอุดหนุน และรูปแบบการเบิกหลายแบบ โดย **คงข้อมูลเดิมไว้ครบ** (migration แบบ additive)
 
-## สรุปการตัดสินใจ (จากที่ยืนยัน)
-- `institution_type` = เปลี่ยนชื่อจาก `school_type` (ค่ายังเป็น ราชการ/เอกชน) → ทำเป็นตารางอ้างอิง
-- `subsidy_type` = มี 2 ค่า: รับเงินอุดหนุน / ไม่รับเงินอุดหนุน
-- โครงสร้าง = ตารางอ้างอิงแยก (มี id)
-- ขอบเขต = ผูกกับข้อมูลบุตรด้วย (children / child_education_history / reimbursements)
+## สรุปการตัดสินใจ (ยืนยันแล้ว)
+- education_level: เพิ่ม `vocational_certificate` (ปวช.) และ `higher_vocational` (ปวส.) และ **เก็บ `vocational` เดิมไว้** (ข้อมูลเดิมไม่เปลี่ยน)
+- ขอบเขต UI: แก้ทั้ง 3 หน้า — settings + children + reimbursements
+- อัตราเดิม 12 แถว: ตั้ง `subsidy_type = none`
 
-## โครงสร้างฐานข้อมูล (migration)
+## โครงสร้างฐานข้อมูล (migration เดียว — additive, ไม่ลบของเดิม)
 
-ตารางอ้างอิงใหม่ (พร้อม GRANT + RLS อ่านได้ทุกคนที่ล็อกอิน, แก้ไขเฉพาะ admin):
-- `institution_types` — code, name_th, sort_order → ราชการ, เอกชน
-- `education_levels` — code, name_th, is_vocational, sort_order → อนุบาล, ประถม, ม.ต้น, ม.ปลาย, **ปวช. (vocational_certificate)**, **ปวส. (higher_vocational)**, ปริญญาตรี (แยกอาชีวะออกเป็น 2 ระดับตามที่ระบุ)
-- `program_groups` — code, name_th, sort_order → พาณิชยกรรม, ช่างอุตสาหกรรม, เกษตรกรรม, คหกรรม, ศิลปกรรม, ท่องเที่ยว, ประมง, สิ่งทอ
-
-enum ใหม่:
-- `subsidy_type` = `subsidized` (รับเงินอุดหนุน), `not_subsidized` (ไม่รับเงินอุดหนุน)
+### enum ใหม่
+- `subsidy_type` = `subsidized`, `non_subsidized`, `none`
 - `reimbursement_type` = `fixed_amount`, `half_of_actual`, `percentage`
 
-ปรับ `reimbursement_rates` (สร้างใหม่ตามโครงสร้างนี้ แล้วย้ายข้อมูลเดิม):
-- `institution_type_id` (FK, required)
-- `subsidy_type` (required)
-- `education_level_id` (FK, required)
-- `program_group_id` (FK, **nullable**)
-- `academic_year` (required)
-- `reimbursement_type` (required, default `fixed_amount`)
-- `reimbursement_percent` (nullable) — ใช้กับ percentage/half
-- `max_amount` (required)
-- **Composite unique index**: (institution_type_id, subsidy_type, education_level_id, COALESCE(program_group_id, sentinel), academic_year) — ใช้ COALESCE เพราะ NULL ปกติไม่ถูกบังคับ unique
+### เพิ่มค่า enum เดิม
+- `education_level` เพิ่ม: `vocational_certificate`, `higher_vocational` (คง `vocational` ไว้)
 
-Validation (ใช้ trigger ตามแนวทาง ไม่ใช้ CHECK):
-- ถ้า education_level เป็นอาชีวะ (is_vocational = true) → `program_group_id` **required**
-- ถ้าไม่ใช่อาชีวะ → `program_group_id` **ต้องเป็น null**
-- ใช้ trigger เดียวกันกับ `reimbursement_rates`, `children`, `child_education_history`
+### ตารางใหม่ `program_groups`
+- คอลัมน์: `id`, `code` (unique), `name`, `active` (default true), `created_at`, `updated_at`
+- GRANT + RLS: อ่านได้ทุกผู้ล็อกอิน, แก้ไขเฉพาะ admin (`has_role`)
+- seed 8 รายการ: business_administration (พาณิชยกรรม), industrial (ช่างอุตสาหกรรม), agriculture (เกษตรกรรม), tourism (ท่องเที่ยว), home_economics (คหกรรม), fisheries (ประมง), fine_arts (ศิลปกรรม), textile (สิ่งทอ)
 
-ปรับตารางที่ผูกข้อมูลบุตร (เพิ่มคอลัมน์ id อ้างอิง + ย้ายข้อมูลเดิม):
-- `children`: เพิ่ม `institution_type_id`, `education_level_id`, `program_group_id`
-- `child_education_history`: เพิ่ม `institution_type_id`, `education_level_id`, `program_group_id`
-- `reimbursements`: เพิ่ม `institution_type_id`, `education_level_id`, `program_group_id`, `subsidy_type`, `reimbursement_type`, `reimbursement_percent`
+### ปรับ `reimbursement_rates` (เพิ่มคอลัมน์ ไม่สร้างใหม่)
+- `subsidy_type` (NOT NULL, default `none`)
+- `program_group_id` uuid (FK → program_groups, **nullable**)
+- `reimbursement_type` (NOT NULL, default `fixed_amount`)
+- `reimbursement_percent` numeric (nullable)
+- `academic_year` มีอยู่แล้ว — คงไว้
+- ตั้งค่าแถวเดิม 12 แถว: `subsidy_type = none`, `reimbursement_type = fixed_amount`, `program_group_id = null`
+- **Composite unique index**: `(school_type, subsidy_type, education_level, COALESCE(program_group_id,'00000000-0000-0000-0000-000000000000'), academic_year)` — ใช้ sentinel เพราะ NULL ปกติไม่ถูกบังคับ unique
 
-การย้ายข้อมูลเดิม (ปลอดภัยเพราะข้อมูลน้อย):
-- map `school_type` government/private → institution_type_id
-- map `education_level` เดิม → education_level_id (แถวที่เป็น `vocational` จะ map เป็น ปวช. ไว้ก่อน ให้แอดมินแก้ภายหลัง)
-- เรท 10 แถวทั่วไป → subsidy_type = subsidized, reimbursement_type = fixed_amount, program_group_id = null
-- เรท `vocational` 2 แถวเดิม (ราชการ 9,000 / เอกชน 12,000) จะถูกตัดออก เพราะอาชีวะต้องระบุ program_group — ให้แอดมินเพิ่มอัตราต่อสาขาในหน้าตั้งค่า
-- คอลัมน์ enum เดิม (`school_type`, `education_level`) จะคงไว้ชั่วคราวเพื่อไม่ให้โค้ดส่วนอื่นพัง แล้วเปลี่ยนโค้ดให้ใช้ id
+### Validation trigger (ใช้ trigger ไม่ใช้ CHECK)
+- ถ้า `education_level` ∈ {vocational_certificate, higher_vocational} → `program_group_id` **required**
+- ถ้าเป็นระดับทั่วไป (อนุบาล/ประถม/มัธยม/ปริญญาตรี/vocational เดิม) → `program_group_id` ต้องเป็น **null**
+- ใช้ trigger เดียวร่วมกับ `reimbursement_rates`, `children`, `child_education_history`
 
-## การคำนวณ (logic ใหม่)
-ฟังก์ชัน lookup อัตราในฟอร์มเบิก:
+### ผูกกับข้อมูลบุตร (เพิ่มคอลัมน์)
+- `children`: เพิ่ม `subsidy_type` (default none), `program_group_id`
+- `child_education_history`: เพิ่ม `subsidy_type` (default none), `program_group_id`
+- `reimbursements`: เพิ่ม `subsidy_type` (default none), `program_group_id`, `reimbursement_type`, `reimbursement_percent`
+- ข้อมูลเดิมทุกแถว → subsidy_type=none, program_group_id=null (ไม่กระทบ)
+
+## Logic การคำนวณ (lookup ใหม่)
 ```text
-หา rate จาก:
-  institution_type_id + subsidy_type + education_level_id
+หา rate จากคีย์ 5 ตัว:
+  school_type + subsidy_type + education_level
   + program_group_id (null ถ้าไม่ใช่อาชีวะ) + academic_year
-จากนั้นคำนวณ entitled_amount ตาม reimbursement_type:
+
+คำนวณ entitled ตาม reimbursement_type:
   fixed_amount    → entitled = max_amount
   half_of_actual  → entitled = min(จ่ายจริง/2, max_amount)
   percentage      → entitled = min(จ่ายจริง * percent/100, max_amount)
 ```
+ตัวอย่างที่รองรับ: รัฐ+ประถม→4000 (fixed) ; เอกชนอาชีวะ+อุดหนุน+ปวช+พาณิชยกรรม→5100 ; +ช่างอุตสาหกรรม→7200 ; ปริญญาตรีเอกชน→half_of_actual 50% เพดาน 25000
 
 ## การเปลี่ยนแปลงฝั่งโค้ด
-- `src/lib/labels.ts`: เพิ่ม label/enum สำหรับ subsidy_type, reimbursement_type, อัปเดต EDU_LEVELS (แยก ปวช./ปวส.), helper คำนวณ entitled
-- `src/routes/_authenticated/settings.tsx`: เปลี่ยนตารางอัตราเป็น CRUD เต็มรูปแบบ — เลือกประเภทสถานศึกษา, รับ/ไม่รับเงินอุดหนุน, ระดับชั้น, กลุ่มสาขา (แสดงเฉพาะเมื่อเป็นอาชีวะ), รูปแบบการเบิก, %, เพดาน
-- `src/routes/_authenticated/children.tsx`: เปลี่ยน dropdown ให้ดึงจากตารางอ้างอิง, แสดง/บังคับเลือกกลุ่มสาขาเมื่อเป็นอาชีวะ, บันทึก id
-- `src/routes/_authenticated/reimbursements.tsx`: ดึง institution/subsidy/level/program จากข้อมูลบุตร, lookup อัตราด้วยคีย์ครบ 5 ตัว, คำนวณ entitled ตาม reimbursement_type, เพิ่มช่อง subsidy_type + program_group ในฟอร์ม
+- `src/lib/labels.ts`: เพิ่ม `EDU_LEVEL_LABEL` (ปวช./ปวส.), อัปเดต `EDU_LEVELS`, เพิ่ม `SUBSIDY_TYPE_LABEL`, `REIMBURSEMENT_TYPE_LABEL`, helper `VOCATIONAL_LEVELS` และ `computeEntitled(rate, actualPaid)`
+- `src/routes/_authenticated/settings.tsx`: เปลี่ยนตารางอัตราเป็น CRUD เต็ม (เพิ่ม/แก้/ลบ) มีคอลัมน์/ฟอร์ม: ประเภทโรงเรียน, subsidy_type, ระดับชั้น, program_group (แสดงเฉพาะเมื่อเลือกระดับอาชีวะ), reimbursement_type, reimbursement_percent (แสดงเมื่อ ≠ fixed_amount), academic_year, max_amount
+- `src/routes/_authenticated/children.tsx`: เพิ่ม dropdown subsidy_type และ program_group (แสดง/บังคับเมื่อระดับเป็นอาชีวะ, ซ่อนเมื่อทั่วไป), บันทึกลง children + child_education_history
+- `src/routes/_authenticated/reimbursements.tsx`: ดึง subsidy_type/program_group จากข้อมูลบุตร, lookup ด้วยคีย์ครบ 5 ตัว, คำนวณ entitled ตาม reimbursement_type, เพิ่มช่อง subsidy_type + program_group ในฟอร์ม
 
 ## หมายเหตุ
-- หน้าตั้งค่าอัตรายังเป็นเฉพาะ admin เหมือนเดิม
-- หลัง migration แอดมินต้องกรอกอัตราอาชีวะรายกลุ่มสาขา (และอัตราแบบ "ไม่รับเงินอุดหนุน" ถ้ามี) ผ่านหน้าตั้งค่า เพราะระบบไม่มีตัวเลขเดิมให้
+- หน้า settings ยังเป็นเฉพาะ admin เหมือนเดิม
+- ข้อมูลเดิมทั้งหมดถูก preserve (12 อัตรา, บุตร, รายการเบิก, ประวัติ)
+- หลัง migration แอดมินต้องกรอกอัตราอาชีวะรายกลุ่มสาขา (ปวช./ปวส. × กลุ่มสาขา × รับ/ไม่รับอุดหนุน) และอัตราปริญญาตรีเ

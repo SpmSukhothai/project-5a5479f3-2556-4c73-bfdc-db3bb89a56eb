@@ -3,7 +3,9 @@ export const EDU_LEVEL_LABEL: Record<string, string> = {
   primary: "ประถมศึกษา",
   lower_secondary: "มัธยมศึกษาตอนต้น",
   upper_secondary: "มัธยมศึกษาตอนปลาย",
-  vocational: "ปวช./ปวส.",
+  vocational: "ปวช./ปวส. (เดิม)",
+  vocational_certificate: "ปวช.",
+  higher_vocational: "ปวส.",
   bachelor: "ปริญญาตรี",
 };
 
@@ -17,9 +19,72 @@ export const EDU_LEVELS = [
   "primary",
   "lower_secondary",
   "upper_secondary",
-  "vocational",
+  "vocational_certificate",
+  "higher_vocational",
   "bachelor",
 ] as const;
+
+// ระดับอาชีวศึกษาที่ต้องระบุกลุ่มสาขาวิชา
+export const VOCATIONAL_LEVELS = ["vocational_certificate", "higher_vocational"] as const;
+
+export function isVocational(level?: string | null) {
+  return !!level && (VOCATIONAL_LEVELS as readonly string[]).includes(level);
+}
+
+export const SUBSIDY_TYPE_LABEL: Record<string, string> = {
+  subsidized: "รับเงินอุดหนุน",
+  non_subsidized: "ไม่รับเงินอุดหนุน",
+  none: "ไม่เกี่ยวข้อง",
+};
+
+export const SUBSIDY_TYPES = ["none", "subsidized", "non_subsidized"] as const;
+
+export const REIMBURSEMENT_TYPE_LABEL: Record<string, string> = {
+  fixed_amount: "เบิกตามเพดาน",
+  half_of_actual: "เบิกครึ่งหนึ่งของจ่ายจริง",
+  percentage: "เบิกตามเปอร์เซ็นต์",
+};
+
+export const REIMBURSEMENT_TYPES = ["fixed_amount", "half_of_actual", "percentage"] as const;
+
+// คำนวณสิทธิที่เบิกได้จาก rate และยอดจ่ายจริง
+export function computeEntitled(
+  rate: { reimbursement_type?: string | null; reimbursement_percent?: number | null; max_amount?: number | null } | null | undefined,
+  actualPaid = 0,
+): number {
+  if (!rate) return 0;
+  const max = Number(rate.max_amount ?? 0);
+  const paid = Number(actualPaid ?? 0);
+  switch (rate.reimbursement_type) {
+    case "half_of_actual":
+      return Math.min(paid / 2, max);
+    case "percentage": {
+      const pct = Number(rate.reimbursement_percent ?? 0);
+      return Math.min((paid * pct) / 100, max);
+    }
+    case "fixed_amount":
+    default:
+      return max;
+  }
+}
+
+const SENTINEL = "00000000-0000-0000-0000-000000000000";
+
+// หา rate จากคีย์ครบ 5 ตัว
+export function findRate(
+  rates: any[],
+  key: { school_type: string; subsidy_type: string; education_level: string; program_group_id?: string | null; academic_year: number },
+) {
+  const pg = key.program_group_id || SENTINEL;
+  return rates.find(
+    (r) =>
+      r.school_type === key.school_type &&
+      r.subsidy_type === key.subsidy_type &&
+      r.education_level === key.education_level &&
+      (r.program_group_id || SENTINEL) === pg &&
+      r.academic_year === key.academic_year,
+  );
+}
 
 export function formatTHB(n: number | null | undefined) {
   return new Intl.NumberFormat("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n ?? 0));
