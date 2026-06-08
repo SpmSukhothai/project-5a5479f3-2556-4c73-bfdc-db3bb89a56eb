@@ -206,6 +206,8 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
   const [studyPlace, setStudyPlace] = useState("");
   const [level, setLevel] = useState("");
   const [schoolType, setSchoolType] = useState("government");
+  const [subsidyType, setSubsidyType] = useState("none");
+  const [programGroupId, setProgramGroupId] = useState("");
   const [academicYear, setAcademicYear] = useState("");
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
 
@@ -213,18 +215,23 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
     queryKey: ["education-history", child.id],
     queryFn: async () => (await supabase.from("child_education_history").select("*").eq("child_id", child.id).order("start_date", { ascending: false })).data ?? [],
   });
+  const { data: programGroups = [] } = useQuery({ queryKey: ["program-groups"], queryFn: async () => (await supabase.from("program_groups").select("*").eq("active", true).order("name")).data ?? [] });
 
   const submit = async () => {
     if (!studyPlace.trim()) return toast.error("กรุณากรอกสถานศึกษา");
+    const voc = isVocational(level);
+    if (voc && !programGroupId) return toast.error("ระดับอาชีวศึกษาต้องเลือกกลุ่มสาขาวิชา");
+    const pg = voc ? programGroupId || null : null;
     const { error } = await supabase.from("child_education_history").insert({
       child_id: child.id, study_place: studyPlace.trim(), education_level: (level || null) as any, school_type: schoolType as any,
+      subsidy_type: subsidyType as any, program_group_id: pg,
       academic_year: academicYear ? Number(academicYear) : null, start_date: startDate, is_current: true,
     });
     if (error) return toast.error("บันทึกไม่สำเร็จ", { description: error.message });
-    const { error: e2 } = await supabase.from("children").update({ study_place: studyPlace.trim(), education_level: (level || null) as any, school_type: schoolType as any }).eq("id", child.id);
+    const { error: e2 } = await supabase.from("children").update({ study_place: studyPlace.trim(), education_level: (level || null) as any, school_type: schoolType as any, subsidy_type: subsidyType as any, program_group_id: pg }).eq("id", child.id);
     if (e2) return toast.error("อัปเดตข้อมูลปัจจุบันไม่สำเร็จ", { description: e2.message });
     toast.success("บันทึกการเปลี่ยนสถานศึกษาสำเร็จ");
-    setAdding(false); setStudyPlace(""); setLevel(""); setSchoolType("government"); setAcademicYear("");
+    setAdding(false); setStudyPlace(""); setLevel(""); setSchoolType("government"); setSubsidyType("none"); setProgramGroupId(""); setAcademicYear("");
     qc.invalidateQueries({ queryKey: ["education-history", child.id] });
     qc.invalidateQueries({ queryKey: ["children"] });
   };
