@@ -156,7 +156,7 @@ function ChildrenPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>ระดับชั้นที่กำลังศึกษา</Label>
-                <Select value={form.education_level} onValueChange={(v) => setForm({ ...form, education_level: v })}>
+                <Select value={form.education_level} onValueChange={(v) => setForm({ ...form, education_level: v, program_group_id: isVocational(v) ? form.program_group_id : "" })}>
                   <SelectTrigger><SelectValue placeholder="-- เลือก --" /></SelectTrigger>
                   <SelectContent>{EDU_LEVELS.map((lv) => <SelectItem key={lv} value={lv}>{EDU_LEVEL_LABEL[lv]}</SelectItem>)}</SelectContent>
                 </Select>
@@ -168,7 +168,24 @@ function ChildrenPage() {
                   <SelectContent>{Object.entries(SCHOOL_TYPE_LABEL).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label>เงินอุดหนุน</Label>
+                <Select value={form.subsidy_type} onValueChange={(v) => setForm({ ...form, subsidy_type: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{SUBSIDY_TYPES.map((k) => <SelectItem key={k} value={k}>{SUBSIDY_TYPE_LABEL[k]}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              {isVocational(form.education_level) && (
+                <div>
+                  <Label>กลุ่มสาขาวิชา *</Label>
+                  <Select value={form.program_group_id} onValueChange={(v) => setForm({ ...form, program_group_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="-- เลือก --" /></SelectTrigger>
+                    <SelectContent>{programGroups.map((g: any) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
+
             {editing && <p className="text-xs text-muted-foreground">หากบุตรเปลี่ยนสถานศึกษา/ระดับชั้น กรุณาใช้ปุ่ม "ประวัติ/เปลี่ยนสถานศึกษา" เพื่อเก็บประวัติย้อนหลัง</p>}
           </div>
           <DialogFooter>
