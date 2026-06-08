@@ -23,6 +23,10 @@ type Form = {
   study_place: string;
   education_level: typeof EDU_LEVELS[number];
   school_type: "government" | "private";
+  subsidy_type: string;
+  program_group_id: string;
+  reimbursement_type: string;
+  reimbursement_percent: number | null;
   entitled_amount: number;
   sem1_pay_date: string; sem1_doc_no: string; sem1_receipt_no: string; sem1_receipt_date: string; sem1_amount: number;
   sem2_pay_date: string; sem2_doc_no: string; sem2_receipt_no: string; sem2_receipt_date: string; sem2_amount: number;
@@ -31,7 +35,8 @@ type Form = {
 
 const emptyForm: Form = {
   academic_year: 2569, guardian_id: "", child_id: "", study_place: "",
-  education_level: "primary", school_type: "government", entitled_amount: 0,
+  education_level: "primary", school_type: "government", subsidy_type: "none", program_group_id: "",
+  reimbursement_type: "fixed_amount", reimbursement_percent: null, entitled_amount: 0,
   sem1_pay_date: "", sem1_doc_no: "", sem1_receipt_no: "", sem1_receipt_date: "", sem1_amount: 0,
   sem2_pay_date: "", sem2_doc_no: "", sem2_receipt_no: "", sem2_receipt_date: "", sem2_amount: 0,
   remark: "",
