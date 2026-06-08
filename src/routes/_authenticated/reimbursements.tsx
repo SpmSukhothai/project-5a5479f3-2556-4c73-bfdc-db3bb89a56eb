@@ -58,9 +58,10 @@ function ReimbPage() {
       .eq("academic_year", year).order("registration_no")).data ?? [],
   });
   const { data: guardians = [] } = useQuery({ queryKey: ["g-list"], queryFn: async () => (await supabase.from("guardians").select("id, prefix, first_name, last_name, employee_code").order("employee_code")).data ?? [] });
-  const { data: children = [] } = useQuery({ queryKey: ["c-list"], queryFn: async () => (await supabase.from("children").select("id, child_name, guardian_id, study_place, education_level, school_type").order("child_name")).data ?? [] });
-  const { data: eduHistory = [] } = useQuery({ queryKey: ["edu-current"], queryFn: async () => (await supabase.from("child_education_history").select("child_id, study_place, education_level, school_type").eq("is_current", true)).data ?? [] });
+  const { data: children = [] } = useQuery({ queryKey: ["c-list"], queryFn: async () => (await supabase.from("children").select("id, child_name, guardian_id, study_place, education_level, school_type, subsidy_type, program_group_id").order("child_name")).data ?? [] });
+  const { data: eduHistory = [] } = useQuery({ queryKey: ["edu-current"], queryFn: async () => (await supabase.from("child_education_history").select("child_id, study_place, education_level, school_type, subsidy_type, program_group_id").eq("is_current", true)).data ?? [] });
   const { data: rates = [] } = useQuery({ queryKey: ["rates"], queryFn: async () => (await supabase.from("reimbursement_rates").select("*")).data ?? [] });
+  const { data: programGroups = [] } = useQuery({ queryKey: ["program-groups"], queryFn: async () => (await supabase.from("program_groups").select("*").eq("active", true).order("name")).data ?? [] });
 
   const filteredChildren = children.filter((c: any) => !form.guardian_id || c.guardian_id === form.guardian_id);
 
@@ -69,7 +70,10 @@ function ReimbPage() {
     setEditing(r);
     setForm({
       academic_year: r.academic_year, guardian_id: r.guardian_id, child_id: r.child_id, study_place: r.study_place || "",
-      education_level: r.education_level, school_type: r.school_type, entitled_amount: Number(r.entitled_amount),
+      education_level: r.education_level, school_type: r.school_type,
+      subsidy_type: r.subsidy_type ?? "none", program_group_id: r.program_group_id ?? "",
+      reimbursement_type: r.reimbursement_type ?? "fixed_amount", reimbursement_percent: r.reimbursement_percent ?? null,
+      entitled_amount: Number(r.entitled_amount),
       sem1_pay_date: r.sem1_pay_date || "", sem1_doc_no: r.sem1_doc_no || "", sem1_receipt_no: r.sem1_receipt_no || "", sem1_receipt_date: r.sem1_receipt_date || "", sem1_amount: Number(r.sem1_amount),
       sem2_pay_date: r.sem2_pay_date || "", sem2_doc_no: r.sem2_doc_no || "", sem2_receipt_no: r.sem2_receipt_no || "", sem2_receipt_date: r.sem2_receipt_date || "", sem2_amount: Number(r.sem2_amount),
       remark: r.remark || "",
@@ -77,32 +81,51 @@ function ReimbPage() {
     setOpen(true);
   };
 
-  // auto-fill study place / level / type / entitlement from the child's data
+  // คำนวณ rate + สิทธิที่เบิกได้จาก state ฟอร์มปัจจุบัน
+  const applyRate = (f: Form): Form => {
+    const rate = findRate(rates, {
+      school_type: f.school_type,
+      subsidy_type: f.subsidy_type,
+      education_level: f.education_level,
+      program_group_id: isVocational(f.education_level) ? f.program_group_id : null,
+      academic_year: f.academic_year,
+    });
+    const paid = Number(f.sem1_amount || 0) + Number(f.sem2_amount || 0);
+    return {
+      ...f,
+      reimbursement_type: rate?.reimbursement_type ?? f.reimbursement_type,
+      reimbursement_percent: rate?.reimbursement_percent ?? null,
+      entitled_amount: rate ? computeEntitled(rate, paid) : f.entitled_amount,
+    };
+  };
+
+  // auto-fill study place / level / type / subsidy / program group / entitlement from the child's data
   const updateChild = (childId: string) => {
     const child = children.find((c: any) => c.id === childId);
     const edu = eduHistory.find((e: any) => e.child_id === childId);
-    // prefer the child's current record; fall back to education history
     const lvl = ((child?.education_level || edu?.education_level) as typeof EDU_LEVELS[number]) || form.education_level;
     const st = ((child?.school_type || edu?.school_type) as "government" | "private") || form.school_type;
     const place = child?.study_place || edu?.study_place || "";
-    const rate = rates.find((r: any) => r.school_type === st && r.education_level === lvl && r.academic_year === form.academic_year);
-    setForm({
-      ...form,
-      child_id: childId,
-      study_place: place,
-      education_level: lvl,
-      school_type: st,
-      entitled_amount: rate ? Number(rate.max_amount) : 0,
-    });
+    const subsidy = child?.subsidy_type || edu?.subsidy_type || "none";
+    const pg = child?.program_group_id || edu?.program_group_id || "";
+    setForm(applyRate({ ...form, child_id: childId, study_place: place, education_level: lvl, school_type: st, subsidy_type: subsidy, program_group_id: pg }));
   };
   const updateLevel = (lvl: any) => {
-    const rate = rates.find((r: any) => r.school_type === form.school_type && r.education_level === lvl && r.academic_year === form.academic_year);
-    setForm({ ...form, education_level: lvl, entitled_amount: Number(rate?.max_amount || form.entitled_amount) });
+    setForm(applyRate({ ...form, education_level: lvl, program_group_id: isVocational(lvl) ? form.program_group_id : "" }));
+  };
+  const setAmount = (key: "sem1_amount" | "sem2_amount", val: number) => {
+    setForm(applyRate({ ...form, [key]: val }));
   };
 
   const save = async () => {
     if (!form.guardian_id || !form.child_id) return toast.error("กรุณาเลือกผู้มีสิทธิและบุตร");
-    const payload: any = { ...form, school_id: null };
+    if (isVocational(form.education_level) && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาต้องเลือกกลุ่มสาขาวิชา");
+    const payload: any = {
+      ...form,
+      school_id: null,
+      program_group_id: isVocational(form.education_level) ? form.program_group_id || null : null,
+      reimbursement_percent: form.reimbursement_percent ?? null,
+    };
     for (const k of ["sem1_pay_date", "sem1_receipt_date", "sem2_pay_date", "sem2_receipt_date"]) {
       if (!payload[k]) payload[k] = null;
     }
