@@ -302,12 +302,32 @@ function ReimbPage() {
             </div>
             <div>
               <Label>ประเภทโรงเรียน</Label>
-              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.school_type} onChange={(e) => setForm({ ...form, school_type: e.target.value as any })}>
+              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.school_type} onChange={(e) => setForm(applyRate({ ...form, school_type: e.target.value as any }))}>
                 <option value="government">ราชการ</option>
                 <option value="private">เอกชน</option>
               </select>
             </div>
+            <div>
+              <Label>เงินอุดหนุน</Label>
+              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.subsidy_type} onChange={(e) => setForm(applyRate({ ...form, subsidy_type: e.target.value }))}>
+                {SUBSIDY_TYPES.map((k) => <option key={k} value={k}>{SUBSIDY_TYPE_LABEL[k]}</option>)}
+              </select>
+            </div>
+            {isVocational(form.education_level) && (
+              <div>
+                <Label>กลุ่มสาขาวิชา *</Label>
+                <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.program_group_id} onChange={(e) => setForm(applyRate({ ...form, program_group_id: e.target.value }))}>
+                  <option value="">-- เลือกกลุ่มสาขา --</option>
+                  {programGroups.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
+                </select>
+              </div>
+            )}
+            <div className="col-span-2 rounded-md bg-accent/40 px-3 py-2 text-sm">
+              รูปแบบการเบิก: <span className="font-semibold">{REIMBURSEMENT_TYPE_LABEL[form.reimbursement_type] || "-"}</span>
+              {form.reimbursement_type !== "fixed_amount" && form.reimbursement_percent != null && <> • {form.reimbursement_percent}% ของจ่ายจริง</>}
+            </div>
             <div className="col-span-2"><Label>สิทธิที่เบิกได้ (บาท)</Label><Input type="number" value={form.entitled_amount} onChange={(e) => setForm({ ...form, entitled_amount: Number(e.target.value) })} /></div>
+
 
             <div className="col-span-2 mt-2 rounded-md border bg-muted/50 p-3">
               <div className="mb-2 font-semibold">ภาคเรียนที่ 1</div>
