@@ -11,12 +11,12 @@ import { Pencil, Trash2, Plus, Search, History } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatThaiDate, EDU_LEVELS, EDU_LEVEL_LABEL, SCHOOL_TYPE_LABEL } from "@/lib/labels";
+import { formatThaiDate, EDU_LEVELS, EDU_LEVEL_LABEL, SCHOOL_TYPE_LABEL, SUBSIDY_TYPE_LABEL, SUBSIDY_TYPES, isVocational } from "@/lib/labels";
 import { ThaiDatePicker } from "@/components/ThaiDatePicker";
 
 export const Route = createFileRoute("/_authenticated/children")({ component: ChildrenPage });
 
-const emptyForm = { guardian_id: "", child_name: "", birth_date: "", study_place: "", education_level: "", school_type: "government", is_active: true };
+const emptyForm = { guardian_id: "", child_name: "", birth_date: "", study_place: "", education_level: "", school_type: "government", subsidy_type: "none", program_group_id: "", is_active: true };
 
 function ChildrenPage() {
   const { role } = useAuth();
