@@ -28,6 +28,7 @@ function ChildrenPage() {
   const [histFor, setHistFor] = useState<any>(null);
 
   const { data: guardians = [] } = useQuery({ queryKey: ["guardians-list"], queryFn: async () => (await supabase.from("guardians").select("id, prefix, first_name, last_name, employee_code").order("employee_code")).data ?? [] });
+  const { data: programGroups = [] } = useQuery({ queryKey: ["program-groups"], queryFn: async () => (await supabase.from("program_groups").select("*").eq("active", true).order("name")).data ?? [] });
   const { data: rows = [] } = useQuery({
     queryKey: ["children"],
     queryFn: async () => (await supabase.from("children").select("*, guardians(prefix, first_name, last_name, employee_code, schools(school_name))").order("created_at", { ascending: false })).data ?? [],
