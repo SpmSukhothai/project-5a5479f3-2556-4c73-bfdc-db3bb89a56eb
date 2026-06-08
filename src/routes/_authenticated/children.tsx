@@ -261,7 +261,7 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>ระดับชั้น</Label>
-                <Select value={level} onValueChange={setLevel}>
+                <Select value={level} onValueChange={(v) => { setLevel(v); if (!isVocational(v)) setProgramGroupId(""); }}>
                   <SelectTrigger><SelectValue placeholder="-- เลือก --" /></SelectTrigger>
                   <SelectContent>{EDU_LEVELS.map((lv) => <SelectItem key={lv} value={lv}>{EDU_LEVEL_LABEL[lv]}</SelectItem>)}</SelectContent>
                 </Select>
@@ -273,7 +273,24 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
                   <SelectContent>{Object.entries(SCHOOL_TYPE_LABEL).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label>เงินอุดหนุน</Label>
+                <Select value={subsidyType} onValueChange={setSubsidyType}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{SUBSIDY_TYPES.map((k) => <SelectItem key={k} value={k}>{SUBSIDY_TYPE_LABEL[k]}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              {isVocational(level) && (
+                <div>
+                  <Label>กลุ่มสาขาวิชา *</Label>
+                  <Select value={programGroupId} onValueChange={setProgramGroupId}>
+                    <SelectTrigger><SelectValue placeholder="-- เลือก --" /></SelectTrigger>
+                    <SelectContent>{programGroups.map((g: any) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div><Label>ปีการศึกษา</Label><Input type="number" placeholder="เช่น 2568" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} /></div>
               <div><Label>วันที่มีผล</Label><Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
