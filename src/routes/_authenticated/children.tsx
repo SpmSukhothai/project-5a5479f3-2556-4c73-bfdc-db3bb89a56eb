@@ -37,12 +37,18 @@ function ChildrenPage() {
   const filtered = rows.filter((r: any) => `${r.child_name} ${r.guardians?.first_name || ""}`.toLowerCase().includes(q.toLowerCase()));
 
   const openNew = () => { setEditing(null); setForm({ ...emptyForm }); setOpen(true); };
-  const openEdit = (r: any) => { setEditing(r); setForm({ ...emptyForm, ...r, study_place: r.study_place ?? "", education_level: r.education_level ?? "" }); setOpen(true); };
+  const openEdit = (r: any) => { setEditing(r); setForm({ ...emptyForm, ...r, study_place: r.study_place ?? "", education_level: r.education_level ?? "", subsidy_type: r.subsidy_type ?? "none", program_group_id: r.program_group_id ?? "" }); setOpen(true); };
 
   const save = async () => {
     if (!form.guardian_id) return toast.error("กรุณาเลือกผู้มีสิทธิ");
+    const voc = isVocational(form.education_level);
+    if (voc && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาต้องเลือกกลุ่มสาขาวิชา");
     const { guardians, ...rest } = form;
-    const payload = { ...rest, education_level: form.education_level || null };
+    const payload = {
+      ...rest,
+      education_level: form.education_level || null,
+      program_group_id: voc ? form.program_group_id || null : null,
+    };
     const res = editing
       ? await supabase.from("children").update(payload).eq("id", editing.id)
       : await supabase.from("children").insert(payload).select("id").single();
@@ -52,7 +58,8 @@ function ChildrenPage() {
       const newId = (res as any).data?.id;
       if (newId) {
         await supabase.from("child_education_history").insert({
-          child_id: newId, study_place: payload.study_place, education_level: payload.education_level, school_type: payload.school_type, is_current: true,
+          child_id: newId, study_place: payload.study_place, education_level: payload.education_level, school_type: payload.school_type,
+          subsidy_type: payload.subsidy_type, program_group_id: payload.program_group_id, is_current: true,
         });
       }
     }
