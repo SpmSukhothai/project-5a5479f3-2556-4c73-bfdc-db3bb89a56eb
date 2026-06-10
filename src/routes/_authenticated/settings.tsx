@@ -15,10 +15,12 @@ import {
   EDU_LEVELS,
   SCHOOL_TYPE_LABEL,
   SUBSIDY_TYPE_LABEL,
-  SUBSIDY_TYPES,
+  PRIVATE_SUBSIDY_TYPES,
   REIMBURSEMENT_TYPE_LABEL,
   REIMBURSEMENT_TYPES,
   isVocational,
+  showsSubsidy,
+  programGroupsForLevel,
   formatTHB,
 } from "@/lib/labels";
 import { useAuth } from "@/hooks/use-auth";
