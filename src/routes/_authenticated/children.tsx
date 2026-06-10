@@ -168,31 +168,33 @@ function ChildrenPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>ระดับชั้นที่กำลังศึกษา</Label>
-                <Select value={form.education_level} onValueChange={(v) => setForm({ ...form, education_level: v, program_group_id: isVocational(v) ? form.program_group_id : "" })}>
+                <Select value={form.education_level} onValueChange={(v) => setForm(normalize({ ...form, education_level: v }))}>
                   <SelectTrigger><SelectValue placeholder="-- เลือก --" /></SelectTrigger>
                   <SelectContent>{EDU_LEVELS.map((lv) => <SelectItem key={lv} value={lv}>{EDU_LEVEL_LABEL[lv]}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
                 <Label>ประเภทสถานศึกษา</Label>
-                <Select value={form.school_type} onValueChange={(v) => setForm({ ...form, school_type: v })}>
+                <Select value={form.school_type} onValueChange={(v) => setForm(normalize({ ...form, school_type: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{Object.entries(SCHOOL_TYPE_LABEL).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>เงินอุดหนุน</Label>
-                <Select value={form.subsidy_type} onValueChange={(v) => setForm({ ...form, subsidy_type: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{SUBSIDY_TYPES.map((k) => <SelectItem key={k} value={k}>{SUBSIDY_TYPE_LABEL[k]}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+              {subsidyVisible && (
+                <div>
+                  <Label>เงินอุดหนุน</Label>
+                  <Select value={form.subsidy_type} onValueChange={(v) => setForm({ ...form, subsidy_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{PRIVATE_SUBSIDY_TYPES.map((k) => <SelectItem key={k} value={k}>{SUBSIDY_TYPE_LABEL[k]}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              )}
               {isVocational(form.education_level) && (
                 <div>
                   <Label>กลุ่มสาขาวิชา *</Label>
                   <Select value={form.program_group_id} onValueChange={(v) => setForm({ ...form, program_group_id: v })}>
                     <SelectTrigger><SelectValue placeholder="-- เลือก --" /></SelectTrigger>
-                    <SelectContent>{programGroups.map((g: any) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}</SelectContent>
+                    <SelectContent>{groupOptions.map((g: any) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               )}
