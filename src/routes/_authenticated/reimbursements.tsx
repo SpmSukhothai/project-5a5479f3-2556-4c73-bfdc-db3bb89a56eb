@@ -313,23 +313,25 @@ function ReimbPage() {
             </div>
             <div>
               <Label>ประเภทโรงเรียน</Label>
-              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.school_type} onChange={(e) => setForm(applyRate({ ...form, school_type: e.target.value as any }))}>
+              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.school_type} onChange={(e) => setForm(applyAll({ ...form, school_type: e.target.value as any }))}>
                 <option value="government">ราชการ</option>
                 <option value="private">เอกชน</option>
               </select>
             </div>
-            <div>
-              <Label>เงินอุดหนุน</Label>
-              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.subsidy_type} onChange={(e) => setForm(applyRate({ ...form, subsidy_type: e.target.value }))}>
-                {SUBSIDY_TYPES.map((k) => <option key={k} value={k}>{SUBSIDY_TYPE_LABEL[k]}</option>)}
-              </select>
-            </div>
+            {showsSubsidy(form.school_type, form.education_level) && (
+              <div>
+                <Label>เงินอุดหนุน</Label>
+                <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.subsidy_type} onChange={(e) => setForm(applyRate({ ...form, subsidy_type: e.target.value }))}>
+                  {PRIVATE_SUBSIDY_TYPES.map((k) => <option key={k} value={k}>{SUBSIDY_TYPE_LABEL[k]}</option>)}
+                </select>
+              </div>
+            )}
             {isVocational(form.education_level) && (
               <div>
                 <Label>กลุ่มสาขาวิชา *</Label>
                 <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.program_group_id} onChange={(e) => setForm(applyRate({ ...form, program_group_id: e.target.value }))}>
                   <option value="">-- เลือกกลุ่มสาขา --</option>
-                  {programGroups.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
+                  {programGroupsForLevel(programGroups, form.education_level).map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
                 </select>
               </div>
             )}
