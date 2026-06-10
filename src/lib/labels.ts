@@ -39,6 +39,20 @@ export const SUBSIDY_TYPE_LABEL: Record<string, string> = {
 
 export const SUBSIDY_TYPES = ["none", "subsidized", "non_subsidized"] as const;
 
+// ตัวเลือกเงินอุดหนุนสำหรับสถานศึกษาเอกชน (ไม่มี none)
+export const PRIVATE_SUBSIDY_TYPES = ["subsidized", "non_subsidized"] as const;
+
+// แสดงตัวเลือกเงินอุดหนุนเฉพาะ "เอกชน" และไม่ใช่ระดับ ปวส.
+export function showsSubsidy(schoolType?: string | null, educationLevel?: string | null) {
+  return schoolType === "private" && educationLevel !== "higher_vocational";
+}
+
+// กรองกลุ่มสาขาตามระดับชั้น (ปวช. = 8 สาขา, ปวส. = 2 กลุ่ม)
+export function programGroupsForLevel(groups: any[], level?: string | null) {
+  if (!level) return [];
+  return groups.filter((g) => (g.level ?? "vocational_certificate") === level);
+}
+
 export const REIMBURSEMENT_TYPE_LABEL: Record<string, string> = {
   fixed_amount: "เบิกตามเพดาน",
   half_of_actual: "เบิกครึ่งหนึ่งของจ่ายจริง",

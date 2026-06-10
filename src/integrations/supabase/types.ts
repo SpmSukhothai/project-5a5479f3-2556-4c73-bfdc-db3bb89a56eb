@@ -306,6 +306,7 @@ export type Database = {
           code: string
           created_at: string
           id: string
+          level: string | null
           name: string
           updated_at: string
         }
@@ -314,6 +315,7 @@ export type Database = {
           code: string
           created_at?: string
           id?: string
+          level?: string | null
           name: string
           updated_at?: string
         }
@@ -322,6 +324,7 @@ export type Database = {
           code?: string
           created_at?: string
           id?: string
+          level?: string | null
           name?: string
           updated_at?: string
         }

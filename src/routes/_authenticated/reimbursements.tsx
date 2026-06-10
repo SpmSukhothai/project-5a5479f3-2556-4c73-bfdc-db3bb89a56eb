@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Printer, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { EDU_LEVEL_LABEL, EDU_LEVELS, SCHOOL_TYPE_LABEL, SUBSIDY_TYPE_LABEL, SUBSIDY_TYPES, REIMBURSEMENT_TYPE_LABEL, isVocational, findRate, computeEntitled, formatTHB, formatThaiDate, ORG_NAME } from "@/lib/labels";
+import { EDU_LEVEL_LABEL, EDU_LEVELS, SCHOOL_TYPE_LABEL, SUBSIDY_TYPE_LABEL, PRIVATE_SUBSIDY_TYPES, REIMBURSEMENT_TYPE_LABEL, isVocational, showsSubsidy, programGroupsForLevel, findRate, computeEntitled, formatTHB, formatThaiDate, ORG_NAME } from "@/lib/labels";
 import { useAuth } from "@/hooks/use-auth";
 import { ThaiDatePicker } from "@/components/ThaiDatePicker";
 
@@ -99,6 +99,16 @@ function ReimbPage() {
     };
   };
 
+  // ปรับ subsidy_type / program_group_id ให้สอดคล้องกับเงื่อนไข แล้วคำนวณ rate ใหม่
+  const normalizeForm = (f: Form): Form => {
+    const visible = showsSubsidy(f.school_type, f.education_level);
+    const subsidy_type = visible ? (!f.subsidy_type || f.subsidy_type === "none" ? "subsidized" : f.subsidy_type) : "none";
+    const validIds = programGroupsForLevel(programGroups, f.education_level).map((g: any) => g.id);
+    const program_group_id = isVocational(f.education_level) && validIds.includes(f.program_group_id) ? f.program_group_id : "";
+    return { ...f, subsidy_type, program_group_id };
+  };
+  const applyAll = (f: Form): Form => applyRate(normalizeForm(f));
+
   // auto-fill study place / level / type / subsidy / program group / entitlement from the child's data
   const updateChild = (childId: string) => {
     const child = children.find((c: any) => c.id === childId);
@@ -108,11 +118,12 @@ function ReimbPage() {
     const place = child?.study_place || edu?.study_place || "";
     const subsidy = child?.subsidy_type || edu?.subsidy_type || "none";
     const pg = child?.program_group_id || edu?.program_group_id || "";
-    setForm(applyRate({ ...form, child_id: childId, study_place: place, education_level: lvl, school_type: st, subsidy_type: subsidy, program_group_id: pg }));
+    setForm(applyAll({ ...form, child_id: childId, study_place: place, education_level: lvl, school_type: st, subsidy_type: subsidy, program_group_id: pg }));
   };
   const updateLevel = (lvl: any) => {
-    setForm(applyRate({ ...form, education_level: lvl, program_group_id: isVocational(lvl) ? form.program_group_id : "" }));
+    setForm(applyAll({ ...form, education_level: lvl }));
   };
+
   const setAmount = (key: "sem1_amount" | "sem2_amount", val: number) => {
     setForm(applyRate({ ...form, [key]: val }));
   };
@@ -302,23 +313,25 @@ function ReimbPage() {
             </div>
             <div>
               <Label>ประเภทโรงเรียน</Label>
-              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.school_type} onChange={(e) => setForm(applyRate({ ...form, school_type: e.target.value as any }))}>
+              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.school_type} onChange={(e) => setForm(applyAll({ ...form, school_type: e.target.value as any }))}>
                 <option value="government">ราชการ</option>
                 <option value="private">เอกชน</option>
               </select>
             </div>
-            <div>
-              <Label>เงินอุดหนุน</Label>
-              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.subsidy_type} onChange={(e) => setForm(applyRate({ ...form, subsidy_type: e.target.value }))}>
-                {SUBSIDY_TYPES.map((k) => <option key={k} value={k}>{SUBSIDY_TYPE_LABEL[k]}</option>)}
-              </select>
-            </div>
+            {showsSubsidy(form.school_type, form.education_level) && (
+              <div>
+                <Label>เงินอุดหนุน</Label>
+                <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.subsidy_type} onChange={(e) => setForm(applyRate({ ...form, subsidy_type: e.target.value }))}>
+                  {PRIVATE_SUBSIDY_TYPES.map((k) => <option key={k} value={k}>{SUBSIDY_TYPE_LABEL[k]}</option>)}
+                </select>
+              </div>
+            )}
             {isVocational(form.education_level) && (
               <div>
                 <Label>กลุ่มสาขาวิชา *</Label>
                 <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.program_group_id} onChange={(e) => setForm(applyRate({ ...form, program_group_id: e.target.value }))}>
                   <option value="">-- เลือกกลุ่มสาขา --</option>
-                  {programGroups.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
+                  {programGroupsForLevel(programGroups, form.education_level).map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
                 </select>
               </div>
             )}
