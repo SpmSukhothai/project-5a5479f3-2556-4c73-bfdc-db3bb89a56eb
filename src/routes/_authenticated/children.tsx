@@ -11,7 +11,7 @@ import { Pencil, Trash2, Plus, Search, History } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatThaiDate, EDU_LEVELS, EDU_LEVEL_LABEL, SCHOOL_TYPE_LABEL, SUBSIDY_TYPE_LABEL, SUBSIDY_TYPES, isVocational } from "@/lib/labels";
+import { formatThaiDate, EDU_LEVELS, EDU_LEVEL_LABEL, SCHOOL_TYPE_LABEL, SUBSIDY_TYPE_LABEL, PRIVATE_SUBSIDY_TYPES, isVocational, showsSubsidy, programGroupsForLevel } from "@/lib/labels";
 import { ThaiDatePicker } from "@/components/ThaiDatePicker";
 
 export const Route = createFileRoute("/_authenticated/children")({ component: ChildrenPage });
