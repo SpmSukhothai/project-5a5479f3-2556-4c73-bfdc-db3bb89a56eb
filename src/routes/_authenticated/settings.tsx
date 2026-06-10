@@ -207,7 +207,7 @@ function Settings() {
             </div>
             <div>
               <Label>ประเภทโรงเรียน</Label>
-              <Select value={form.school_type} onValueChange={(v) => setForm({ ...form, school_type: v })}>
+              <Select value={form.school_type} onValueChange={(v) => setForm(normalize({ ...form, school_type: v }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -221,26 +221,8 @@ function Settings() {
               </Select>
             </div>
             <div>
-              <Label>เงินอุดหนุน</Label>
-              <Select value={form.subsidy_type} onValueChange={(v) => setForm({ ...form, subsidy_type: v })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SUBSIDY_TYPES.map((k) => (
-                    <SelectItem key={k} value={k}>
-                      {SUBSIDY_TYPE_LABEL[k]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
               <Label>ระดับชั้น</Label>
-              <Select
-                value={form.education_level}
-                onValueChange={(v) => setForm({ ...form, education_level: v, program_group_id: isVocational(v) ? form.program_group_id : "" })}
-              >
+              <Select value={form.education_level} onValueChange={(v) => setForm(normalize({ ...form, education_level: v }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -253,6 +235,23 @@ function Settings() {
                 </SelectContent>
               </Select>
             </div>
+            {subsidyVisible && (
+              <div>
+                <Label>เงินอุดหนุน</Label>
+                <Select value={form.subsidy_type} onValueChange={(v) => setForm({ ...form, subsidy_type: v })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PRIVATE_SUBSIDY_TYPES.map((k) => (
+                      <SelectItem key={k} value={k}>
+                        {SUBSIDY_TYPE_LABEL[k]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             {voc && (
               <div className="col-span-2">
                 <Label>กลุ่มสาขาวิชา *</Label>
@@ -261,7 +260,7 @@ function Settings() {
                     <SelectValue placeholder="-- เลือกกลุ่มสาขา --" />
                   </SelectTrigger>
                   <SelectContent>
-                    {programGroups.map((g: any) => (
+                    {groupOptions.map((g: any) => (
                       <SelectItem key={g.id} value={g.id}>
                         {g.name}
                       </SelectItem>
