@@ -85,6 +85,17 @@ function Settings() {
 
   const voc = isVocational(form.education_level);
   const needPercent = form.reimbursement_type !== "fixed_amount";
+  const subsidyVisible = showsSubsidy(form.school_type, form.education_level);
+  const groupOptions = programGroupsForLevel(programGroups, form.education_level);
+
+  // ปรับค่า subsidy_type / program_group_id ให้สอดคล้องกับเงื่อนไขเมื่อเปลี่ยนโรงเรียน/ระดับ
+  const normalize = (f: any) => {
+    const visible = showsSubsidy(f.school_type, f.education_level);
+    const subsidy_type = visible ? (!f.subsidy_type || f.subsidy_type === "none" ? "subsidized" : f.subsidy_type) : "none";
+    const validIds = programGroupsForLevel(programGroups, f.education_level).map((g: any) => g.id);
+    const program_group_id = isVocational(f.education_level) && validIds.includes(f.program_group_id) ? f.program_group_id : "";
+    return { ...f, subsidy_type, program_group_id };
+  };
 
   const save = async () => {
     if (voc && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาต้องเลือกกลุ่มสาขาวิชา");
