@@ -99,6 +99,16 @@ function ReimbPage() {
     };
   };
 
+  // ปรับ subsidy_type / program_group_id ให้สอดคล้องกับเงื่อนไข แล้วคำนวณ rate ใหม่
+  const normalizeForm = (f: Form): Form => {
+    const visible = showsSubsidy(f.school_type, f.education_level);
+    const subsidy_type = visible ? (!f.subsidy_type || f.subsidy_type === "none" ? "subsidized" : f.subsidy_type) : "none";
+    const validIds = programGroupsForLevel(programGroups, f.education_level).map((g: any) => g.id);
+    const program_group_id = isVocational(f.education_level) && validIds.includes(f.program_group_id) ? f.program_group_id : "";
+    return { ...f, subsidy_type, program_group_id };
+  };
+  const applyAll = (f: Form): Form => applyRate(normalizeForm(f));
+
   // auto-fill study place / level / type / subsidy / program group / entitlement from the child's data
   const updateChild = (childId: string) => {
     const child = children.find((c: any) => c.id === childId);
@@ -108,11 +118,12 @@ function ReimbPage() {
     const place = child?.study_place || edu?.study_place || "";
     const subsidy = child?.subsidy_type || edu?.subsidy_type || "none";
     const pg = child?.program_group_id || edu?.program_group_id || "";
-    setForm(applyRate({ ...form, child_id: childId, study_place: place, education_level: lvl, school_type: st, subsidy_type: subsidy, program_group_id: pg }));
+    setForm(applyAll({ ...form, child_id: childId, study_place: place, education_level: lvl, school_type: st, subsidy_type: subsidy, program_group_id: pg }));
   };
   const updateLevel = (lvl: any) => {
-    setForm(applyRate({ ...form, education_level: lvl, program_group_id: isVocational(lvl) ? form.program_group_id : "" }));
+    setForm(applyAll({ ...form, education_level: lvl }));
   };
+
   const setAmount = (key: "sem1_amount" | "sem2_amount", val: number) => {
     setForm(applyRate({ ...form, [key]: val }));
   };
