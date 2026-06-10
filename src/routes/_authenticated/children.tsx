@@ -275,31 +275,43 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>ระดับชั้น</Label>
-                <Select value={level} onValueChange={(v) => { setLevel(v); if (!isVocational(v)) setProgramGroupId(""); }}>
+                <Select value={level} onValueChange={(v) => {
+                  setLevel(v);
+                  const ids = programGroupsForLevel(programGroups, v).map((g: any) => g.id);
+                  if (!isVocational(v) || !ids.includes(programGroupId)) setProgramGroupId("");
+                  if (!showsSubsidy(schoolType, v)) setSubsidyType("none");
+                  else if (subsidyType === "none") setSubsidyType("subsidized");
+                }}>
                   <SelectTrigger><SelectValue placeholder="-- เลือก --" /></SelectTrigger>
                   <SelectContent>{EDU_LEVELS.map((lv) => <SelectItem key={lv} value={lv}>{EDU_LEVEL_LABEL[lv]}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
                 <Label>ประเภทสถานศึกษา</Label>
-                <Select value={schoolType} onValueChange={setSchoolType}>
+                <Select value={schoolType} onValueChange={(v) => {
+                  setSchoolType(v);
+                  if (!showsSubsidy(v, level)) setSubsidyType("none");
+                  else if (subsidyType === "none") setSubsidyType("subsidized");
+                }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{Object.entries(SCHOOL_TYPE_LABEL).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>เงินอุดหนุน</Label>
-                <Select value={subsidyType} onValueChange={setSubsidyType}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{SUBSIDY_TYPES.map((k) => <SelectItem key={k} value={k}>{SUBSIDY_TYPE_LABEL[k]}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+              {showsSubsidy(schoolType, level) && (
+                <div>
+                  <Label>เงินอุดหนุน</Label>
+                  <Select value={subsidyType} onValueChange={setSubsidyType}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{PRIVATE_SUBSIDY_TYPES.map((k) => <SelectItem key={k} value={k}>{SUBSIDY_TYPE_LABEL[k]}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              )}
               {isVocational(level) && (
                 <div>
                   <Label>กลุ่มสาขาวิชา *</Label>
                   <Select value={programGroupId} onValueChange={setProgramGroupId}>
                     <SelectTrigger><SelectValue placeholder="-- เลือก --" /></SelectTrigger>
-                    <SelectContent>{programGroups.map((g: any) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}</SelectContent>
+                    <SelectContent>{programGroupsForLevel(programGroups, level).map((g: any) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               )}
