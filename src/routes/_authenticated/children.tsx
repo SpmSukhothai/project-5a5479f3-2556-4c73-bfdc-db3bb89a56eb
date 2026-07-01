@@ -190,7 +190,7 @@ function ChildrenPage() {
                   </Select>
                 </div>
               )}
-              {isVocational(form.education_level) && (
+              {programGroupVisible && (
                 <div>
                   <Label>กลุ่มสาขาวิชา *</Label>
                   <Select value={form.program_group_id} onValueChange={(v) => setForm({ ...form, program_group_id: v })}>
