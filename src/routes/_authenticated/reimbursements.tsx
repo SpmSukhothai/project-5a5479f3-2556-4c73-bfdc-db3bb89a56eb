@@ -104,7 +104,7 @@ function ReimbPage() {
     const visible = showsSubsidy(f.school_type, f.education_level);
     const subsidy_type = visible ? (!f.subsidy_type || f.subsidy_type === "none" ? "subsidized" : f.subsidy_type) : "none";
     const validIds = programGroupsForLevel(programGroups, f.education_level).map((g: any) => g.id);
-    const program_group_id = isVocational(f.education_level) && validIds.includes(f.program_group_id) ? f.program_group_id : "";
+    const program_group_id = showsProgramGroup(f.school_type, f.education_level) && validIds.includes(f.program_group_id) ? f.program_group_id : "";
     return { ...f, subsidy_type, program_group_id };
   };
   const applyAll = (f: Form): Form => applyRate(normalizeForm(f));
