@@ -130,11 +130,13 @@ function ReimbPage() {
 
   const save = async () => {
     if (!form.guardian_id || !form.child_id) return toast.error("กรุณาเลือกผู้มีสิทธิและบุตร");
-    if (isVocational(form.education_level) && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาต้องเลือกกลุ่มสาขาวิชา");
+    if (showsProgramGroup(form.school_type, form.education_level) && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาเอกชนต้องเลือกกลุ่มสาขาวิชา");
+    const remaining = Number(form.entitled_amount) - Number(form.sem1_amount) - Number(form.sem2_amount);
+    if (remaining < 0) return toast.error("ยอดเบิกเกินสิทธิที่เบิกได้", { description: "ยอดคงเหลือติดลบ กรุณาตรวจสอบจำนวนเงินที่เบิก" });
     const payload: any = {
       ...form,
       school_id: null,
-      program_group_id: isVocational(form.education_level) ? form.program_group_id || null : null,
+      program_group_id: showsProgramGroup(form.school_type, form.education_level) ? form.program_group_id || null : null,
       reimbursement_percent: form.reimbursement_percent ?? null,
     };
     for (const k of ["sem1_pay_date", "sem1_receipt_date", "sem2_pay_date", "sem2_receipt_date"]) {
