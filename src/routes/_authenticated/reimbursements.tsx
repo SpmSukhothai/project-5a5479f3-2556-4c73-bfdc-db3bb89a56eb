@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Printer, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { EDU_LEVEL_LABEL, EDU_LEVELS, SCHOOL_TYPE_LABEL, SUBSIDY_TYPE_LABEL, PRIVATE_SUBSIDY_TYPES, REIMBURSEMENT_TYPE_LABEL, isVocational, showsSubsidy, programGroupsForLevel, findRate, computeEntitled, formatTHB, formatThaiDate, ORG_NAME } from "@/lib/labels";
+import { EDU_LEVEL_LABEL, EDU_LEVELS, SCHOOL_TYPE_LABEL, SUBSIDY_TYPE_LABEL, REIMBURSEMENT_TYPE_LABEL, isVocational, showsSubsidy, showsProgramGroup, programGroupsForLevel, findRate, computeEntitled, formatTHB, formatThaiDate, formatThaiDateShort, ORG_NAME } from "@/lib/labels";
 import { useAuth } from "@/hooks/use-auth";
 import { ThaiDatePicker } from "@/components/ThaiDatePicker";
 
@@ -104,7 +104,7 @@ function ReimbPage() {
     const visible = showsSubsidy(f.school_type, f.education_level);
     const subsidy_type = visible ? (!f.subsidy_type || f.subsidy_type === "none" ? "subsidized" : f.subsidy_type) : "none";
     const validIds = programGroupsForLevel(programGroups, f.education_level).map((g: any) => g.id);
-    const program_group_id = isVocational(f.education_level) && validIds.includes(f.program_group_id) ? f.program_group_id : "";
+    const program_group_id = showsProgramGroup(f.school_type, f.education_level) && validIds.includes(f.program_group_id) ? f.program_group_id : "";
     return { ...f, subsidy_type, program_group_id };
   };
   const applyAll = (f: Form): Form => applyRate(normalizeForm(f));
@@ -120,9 +120,6 @@ function ReimbPage() {
     const pg = child?.program_group_id || edu?.program_group_id || "";
     setForm(applyAll({ ...form, child_id: childId, study_place: place, education_level: lvl, school_type: st, subsidy_type: subsidy, program_group_id: pg }));
   };
-  const updateLevel = (lvl: any) => {
-    setForm(applyAll({ ...form, education_level: lvl }));
-  };
 
   const setAmount = (key: "sem1_amount" | "sem2_amount", val: number) => {
     setForm(applyRate({ ...form, [key]: val }));
@@ -130,11 +127,13 @@ function ReimbPage() {
 
   const save = async () => {
     if (!form.guardian_id || !form.child_id) return toast.error("กรุณาเลือกผู้มีสิทธิและบุตร");
-    if (isVocational(form.education_level) && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาต้องเลือกกลุ่มสาขาวิชา");
+    if (showsProgramGroup(form.school_type, form.education_level) && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาเอกชนต้องเลือกกลุ่มสาขาวิชา");
+    const remaining = Number(form.entitled_amount) - Number(form.sem1_amount) - Number(form.sem2_amount);
+    if (remaining < 0) return toast.error("ยอดเบิกเกินสิทธิที่เบิกได้", { description: "ยอดคงเหลือติดลบ กรุณาตรวจสอบจำนวนเงินที่เบิก" });
     const payload: any = {
       ...form,
       school_id: null,
-      program_group_id: isVocational(form.education_level) ? form.program_group_id || null : null,
+      program_group_id: showsProgramGroup(form.school_type, form.education_level) ? form.program_group_id || null : null,
       reimbursement_percent: form.reimbursement_percent ?? null,
     };
     for (const k of ["sem1_pay_date", "sem1_receipt_date", "sem2_pay_date", "sem2_receipt_date"]) {
@@ -230,11 +229,11 @@ function ReimbPage() {
                     <td>{EDU_LEVEL_LABEL[r.education_level]}</td>
                     <td className="text-center">{SCHOOL_TYPE_LABEL[r.school_type]}</td>
                     <td className="text-right">{formatTHB(r.entitled_amount)}</td>
-                    <td className="text-xs">{formatThaiDate(r.sem1_pay_date)}</td>
-                    <td className="text-xs">{r.sem1_doc_no || "-"}<br/>{r.sem1_receipt_no}<br/>{formatThaiDate(r.sem1_receipt_date)}</td>
+                    <td className="text-xs">{formatThaiDateShort(r.sem1_pay_date)}</td>
+                    <td className="text-xs">{r.sem1_doc_no || "-"}<br/>{r.sem1_receipt_no}<br/>{formatThaiDateShort(r.sem1_receipt_date)}</td>
                     <td className="text-right">{formatTHB(r.sem1_amount)}</td>
-                    <td className="text-xs">{formatThaiDate(r.sem2_pay_date)}</td>
-                    <td className="text-xs">{r.sem2_doc_no || "-"}<br/>{r.sem2_receipt_no}<br/>{formatThaiDate(r.sem2_receipt_date)}</td>
+                    <td className="text-xs">{formatThaiDateShort(r.sem2_pay_date)}</td>
+                    <td className="text-xs">{r.sem2_doc_no || "-"}<br/>{r.sem2_receipt_no}<br/>{formatThaiDateShort(r.sem2_receipt_date)}</td>
                     <td className="text-right">{formatTHB(r.sem2_amount)}</td>
                     <td className="text-right font-semibold">{formatTHB(rem)}</td>
                     <td>{r.remark || "-"}</td>
@@ -306,33 +305,31 @@ function ReimbPage() {
               </div>
             </div>
             <div>
-              <Label>ระดับชั้น *</Label>
-              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.education_level} onChange={(e) => updateLevel(e.target.value)}>
-                {EDU_LEVELS.map(l => <option key={l} value={l}>{EDU_LEVEL_LABEL[l]}</option>)}
-              </select>
+              <Label>ระดับชั้น (ดึงอัตโนมัติ)</Label>
+              <div className="flex h-10 w-full items-center rounded-md border bg-muted px-3 text-sm">
+                {form.child_id ? (EDU_LEVEL_LABEL[form.education_level] || "-") : <span className="text-muted-foreground">เลือกบุตรก่อน</span>}
+              </div>
             </div>
             <div>
-              <Label>ประเภทโรงเรียน</Label>
-              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.school_type} onChange={(e) => setForm(applyAll({ ...form, school_type: e.target.value as any }))}>
-                <option value="government">ราชการ</option>
-                <option value="private">เอกชน</option>
-              </select>
+              <Label>ประเภทโรงเรียน (ดึงอัตโนมัติ)</Label>
+              <div className="flex h-10 w-full items-center rounded-md border bg-muted px-3 text-sm">
+                {form.child_id ? (SCHOOL_TYPE_LABEL[form.school_type] || "-") : <span className="text-muted-foreground">เลือกบุตรก่อน</span>}
+              </div>
             </div>
             {showsSubsidy(form.school_type, form.education_level) && (
               <div>
-                <Label>เงินอุดหนุน</Label>
-                <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.subsidy_type} onChange={(e) => setForm(applyRate({ ...form, subsidy_type: e.target.value }))}>
-                  {PRIVATE_SUBSIDY_TYPES.map((k) => <option key={k} value={k}>{SUBSIDY_TYPE_LABEL[k]}</option>)}
-                </select>
+                <Label>เงินอุดหนุน (ดึงอัตโนมัติ)</Label>
+                <div className="flex h-10 w-full items-center rounded-md border bg-muted px-3 text-sm">
+                  {SUBSIDY_TYPE_LABEL[form.subsidy_type] || "-"}
+                </div>
               </div>
             )}
-            {isVocational(form.education_level) && (
+            {showsProgramGroup(form.school_type, form.education_level) && (
               <div>
-                <Label>กลุ่มสาขาวิชา *</Label>
-                <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.program_group_id} onChange={(e) => setForm(applyRate({ ...form, program_group_id: e.target.value }))}>
-                  <option value="">-- เลือกกลุ่มสาขา --</option>
-                  {programGroupsForLevel(programGroups, form.education_level).map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
-                </select>
+                <Label>กลุ่มสาขาวิชา (ดึงอัตโนมัติ)</Label>
+                <div className="flex h-10 w-full items-center rounded-md border bg-muted px-3 text-sm">
+                  {programGroups.find((g: any) => g.id === form.program_group_id)?.name || <span className="text-destructive">บุตรยังไม่ได้ระบุกลุ่มสาขา</span>}
+                </div>
               </div>
             )}
             <div className="col-span-2 rounded-md bg-accent/40 px-3 py-2 text-sm">
@@ -365,10 +362,17 @@ function ReimbPage() {
             </div>
 
             <div className="col-span-2"><Label>หมายเหตุ</Label><Input value={form.remark} onChange={(e) => setForm({ ...form, remark: e.target.value })} /></div>
-            <div className="col-span-2 rounded-md bg-accent/50 p-3 text-sm">
-              <div>ยอดเบิกแล้ว: <span className="font-semibold">{formatTHB(form.sem1_amount + form.sem2_amount)}</span> บาท</div>
-              <div>คงเหลือ: <span className="font-semibold">{formatTHB(form.entitled_amount - form.sem1_amount - form.sem2_amount)}</span> บาท</div>
-            </div>
+            {(() => {
+              const remaining = form.entitled_amount - form.sem1_amount - form.sem2_amount;
+              const negative = remaining < 0;
+              return (
+                <div className="col-span-2 rounded-md bg-accent/50 p-3 text-sm">
+                  <div>ยอดเบิกแล้ว: <span className="font-semibold">{formatTHB(form.sem1_amount + form.sem2_amount)}</span> บาท</div>
+                  <div>คงเหลือ: <span className={`font-semibold ${negative ? "text-destructive" : ""}`}>{formatTHB(remaining)}</span> บาท</div>
+                  {negative && <div className="mt-1 text-destructive">ยอดเบิกเกินสิทธิที่เบิกได้ ไม่สามารถบันทึกได้</div>}
+                </div>
+              );
+            })()}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>ยกเลิก</Button>

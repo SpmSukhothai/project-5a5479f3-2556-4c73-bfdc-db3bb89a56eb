@@ -11,7 +11,7 @@ import { Pencil, Trash2, Plus, Search, History } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatThaiDate, EDU_LEVELS, EDU_LEVEL_LABEL, SCHOOL_TYPE_LABEL, SUBSIDY_TYPE_LABEL, PRIVATE_SUBSIDY_TYPES, isVocational, showsSubsidy, programGroupsForLevel } from "@/lib/labels";
+import { formatThaiDate, EDU_LEVELS, EDU_LEVEL_LABEL, SCHOOL_TYPE_LABEL, SUBSIDY_TYPE_LABEL, PRIVATE_SUBSIDY_TYPES, showsSubsidy, showsProgramGroup, programGroupsForLevel } from "@/lib/labels";
 import { ThaiDatePicker } from "@/components/ThaiDatePicker";
 
 export const Route = createFileRoute("/_authenticated/children")({ component: ChildrenPage });
@@ -44,22 +44,23 @@ function ChildrenPage() {
     const visible = showsSubsidy(f.school_type, f.education_level);
     const subsidy_type = visible ? (!f.subsidy_type || f.subsidy_type === "none" ? "subsidized" : f.subsidy_type) : "none";
     const validIds = programGroupsForLevel(programGroups, f.education_level).map((g: any) => g.id);
-    const program_group_id = isVocational(f.education_level) && validIds.includes(f.program_group_id) ? f.program_group_id : "";
+    const program_group_id = showsProgramGroup(f.school_type, f.education_level) && validIds.includes(f.program_group_id) ? f.program_group_id : "";
     return { ...f, subsidy_type, program_group_id };
   };
   const subsidyVisible = showsSubsidy(form.school_type, form.education_level);
+  const programGroupVisible = showsProgramGroup(form.school_type, form.education_level);
   const groupOptions = programGroupsForLevel(programGroups, form.education_level);
 
 
   const save = async () => {
     if (!form.guardian_id) return toast.error("กรุณาเลือกผู้มีสิทธิ");
-    const voc = isVocational(form.education_level);
-    if (voc && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาต้องเลือกกลุ่มสาขาวิชา");
+    const needsGroup = showsProgramGroup(form.school_type, form.education_level);
+    if (needsGroup && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาเอกชนต้องเลือกกลุ่มสาขาวิชา");
     const { guardians, ...rest } = form;
     const payload = {
       ...rest,
       education_level: form.education_level || null,
-      program_group_id: voc ? form.program_group_id || null : null,
+      program_group_id: needsGroup ? form.program_group_id || null : null,
     };
     const res = editing
       ? await supabase.from("children").update(payload).eq("id", editing.id)
@@ -189,7 +190,7 @@ function ChildrenPage() {
                   </Select>
                 </div>
               )}
-              {isVocational(form.education_level) && (
+              {programGroupVisible && (
                 <div>
                   <Label>กลุ่มสาขาวิชา *</Label>
                   <Select value={form.program_group_id} onValueChange={(v) => setForm({ ...form, program_group_id: v })}>
@@ -233,9 +234,9 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
 
   const submit = async () => {
     if (!studyPlace.trim()) return toast.error("กรุณากรอกสถานศึกษา");
-    const voc = isVocational(level);
-    if (voc && !programGroupId) return toast.error("ระดับอาชีวศึกษาต้องเลือกกลุ่มสาขาวิชา");
-    const pg = voc ? programGroupId || null : null;
+    const needsGroup = showsProgramGroup(schoolType, level);
+    if (needsGroup && !programGroupId) return toast.error("ระดับอาชีวศึกษาเอกชนต้องเลือกกลุ่มสาขาวิชา");
+    const pg = needsGroup ? programGroupId || null : null;
     const { error } = await supabase.from("child_education_history").insert({
       child_id: child.id, study_place: studyPlace.trim(), education_level: (level || null) as any, school_type: schoolType as any,
       subsidy_type: subsidyType as any, program_group_id: pg,
@@ -278,7 +279,7 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
                 <Select value={level} onValueChange={(v) => {
                   setLevel(v);
                   const ids = programGroupsForLevel(programGroups, v).map((g: any) => g.id);
-                  if (!isVocational(v) || !ids.includes(programGroupId)) setProgramGroupId("");
+                  if (!showsProgramGroup(schoolType, v) || !ids.includes(programGroupId)) setProgramGroupId("");
                   if (!showsSubsidy(schoolType, v)) setSubsidyType("none");
                   else if (subsidyType === "none") setSubsidyType("subsidized");
                 }}>
@@ -290,6 +291,7 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
                 <Label>ประเภทสถานศึกษา</Label>
                 <Select value={schoolType} onValueChange={(v) => {
                   setSchoolType(v);
+                  if (!showsProgramGroup(v, level)) setProgramGroupId("");
                   if (!showsSubsidy(v, level)) setSubsidyType("none");
                   else if (subsidyType === "none") setSubsidyType("subsidized");
                 }}>
@@ -306,7 +308,7 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
                   </Select>
                 </div>
               )}
-              {isVocational(level) && (
+              {showsProgramGroup(schoolType, level) && (
                 <div>
                   <Label>กลุ่มสาขาวิชา *</Label>
                   <Select value={programGroupId} onValueChange={setProgramGroupId}>
