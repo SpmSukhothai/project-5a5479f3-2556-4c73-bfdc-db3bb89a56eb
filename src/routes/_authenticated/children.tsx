@@ -279,7 +279,7 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
                 <Select value={level} onValueChange={(v) => {
                   setLevel(v);
                   const ids = programGroupsForLevel(programGroups, v).map((g: any) => g.id);
-                  if (!isVocational(v) || !ids.includes(programGroupId)) setProgramGroupId("");
+                  if (!showsProgramGroup(schoolType, v) || !ids.includes(programGroupId)) setProgramGroupId("");
                   if (!showsSubsidy(schoolType, v)) setSubsidyType("none");
                   else if (subsidyType === "none") setSubsidyType("subsidized");
                 }}>
