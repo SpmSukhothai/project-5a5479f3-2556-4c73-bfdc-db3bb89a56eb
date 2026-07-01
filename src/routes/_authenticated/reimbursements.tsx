@@ -365,10 +365,17 @@ function ReimbPage() {
             </div>
 
             <div className="col-span-2"><Label>หมายเหตุ</Label><Input value={form.remark} onChange={(e) => setForm({ ...form, remark: e.target.value })} /></div>
-            <div className="col-span-2 rounded-md bg-accent/50 p-3 text-sm">
-              <div>ยอดเบิกแล้ว: <span className="font-semibold">{formatTHB(form.sem1_amount + form.sem2_amount)}</span> บาท</div>
-              <div>คงเหลือ: <span className="font-semibold">{formatTHB(form.entitled_amount - form.sem1_amount - form.sem2_amount)}</span> บาท</div>
-            </div>
+            {(() => {
+              const remaining = form.entitled_amount - form.sem1_amount - form.sem2_amount;
+              const negative = remaining < 0;
+              return (
+                <div className="col-span-2 rounded-md bg-accent/50 p-3 text-sm">
+                  <div>ยอดเบิกแล้ว: <span className="font-semibold">{formatTHB(form.sem1_amount + form.sem2_amount)}</span> บาท</div>
+                  <div>คงเหลือ: <span className={`font-semibold ${negative ? "text-destructive" : ""}`}>{formatTHB(remaining)}</span> บาท</div>
+                  {negative && <div className="mt-1 text-destructive">ยอดเบิกเกินสิทธิที่เบิกได้ ไม่สามารถบันทึกได้</div>}
+                </div>
+              );
+            })()}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>ยกเลิก</Button>
