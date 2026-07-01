@@ -47,6 +47,11 @@ export function showsSubsidy(schoolType?: string | null, educationLevel?: string
   return schoolType === "private" && educationLevel !== "higher_vocational";
 }
 
+// แสดง/บังคับกลุ่มสาขาวิชาเฉพาะระดับอาชีวศึกษา (ปวช./ปวส.) ที่เป็น "เอกชน"
+export function showsProgramGroup(schoolType?: string | null, educationLevel?: string | null) {
+  return schoolType === "private" && isVocational(educationLevel);
+}
+
 // กรองกลุ่มสาขาตามระดับชั้น (ปวช. = 8 สาขา, ปวส. = 2 กลุ่ม)
 export function programGroupsForLevel(groups: any[], level?: string | null) {
   if (!level) return [];
@@ -108,6 +113,13 @@ export function formatThaiDate(d?: string | null) {
   if (!d) return "-";
   const date = new Date(d);
   return new Intl.DateTimeFormat("th-TH", { day: "2-digit", month: "long", year: "numeric" }).format(date);
+}
+
+// รูปแบบวันที่แบบสั้น เช่น "24 เม.ย. 69" (วัน + เดือนย่อ + ปี พ.ศ. 2 หลัก)
+export function formatThaiDateShort(d?: string | null) {
+  if (!d) return "-";
+  const date = new Date(d);
+  return new Intl.DateTimeFormat("th-TH", { day: "numeric", month: "short", year: "2-digit" }).format(date);
 }
 
 export const ORG_NAME = "สำนักงานเขตพื้นที่การศึกษามัธยมศึกษาสุโขทัย";
