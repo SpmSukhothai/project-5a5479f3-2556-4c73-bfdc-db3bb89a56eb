@@ -308,33 +308,31 @@ function ReimbPage() {
               </div>
             </div>
             <div>
-              <Label>ระดับชั้น *</Label>
-              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.education_level} onChange={(e) => updateLevel(e.target.value)}>
-                {EDU_LEVELS.map(l => <option key={l} value={l}>{EDU_LEVEL_LABEL[l]}</option>)}
-              </select>
+              <Label>ระดับชั้น (ดึงอัตโนมัติ)</Label>
+              <div className="flex h-10 w-full items-center rounded-md border bg-muted px-3 text-sm">
+                {form.child_id ? (EDU_LEVEL_LABEL[form.education_level] || "-") : <span className="text-muted-foreground">เลือกบุตรก่อน</span>}
+              </div>
             </div>
             <div>
-              <Label>ประเภทโรงเรียน</Label>
-              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.school_type} onChange={(e) => setForm(applyAll({ ...form, school_type: e.target.value as any }))}>
-                <option value="government">ราชการ</option>
-                <option value="private">เอกชน</option>
-              </select>
+              <Label>ประเภทโรงเรียน (ดึงอัตโนมัติ)</Label>
+              <div className="flex h-10 w-full items-center rounded-md border bg-muted px-3 text-sm">
+                {form.child_id ? (SCHOOL_TYPE_LABEL[form.school_type] || "-") : <span className="text-muted-foreground">เลือกบุตรก่อน</span>}
+              </div>
             </div>
             {showsSubsidy(form.school_type, form.education_level) && (
               <div>
-                <Label>เงินอุดหนุน</Label>
-                <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.subsidy_type} onChange={(e) => setForm(applyRate({ ...form, subsidy_type: e.target.value }))}>
-                  {PRIVATE_SUBSIDY_TYPES.map((k) => <option key={k} value={k}>{SUBSIDY_TYPE_LABEL[k]}</option>)}
-                </select>
+                <Label>เงินอุดหนุน (ดึงอัตโนมัติ)</Label>
+                <div className="flex h-10 w-full items-center rounded-md border bg-muted px-3 text-sm">
+                  {SUBSIDY_TYPE_LABEL[form.subsidy_type] || "-"}
+                </div>
               </div>
             )}
-            {isVocational(form.education_level) && (
+            {showsProgramGroup(form.school_type, form.education_level) && (
               <div>
-                <Label>กลุ่มสาขาวิชา *</Label>
-                <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.program_group_id} onChange={(e) => setForm(applyRate({ ...form, program_group_id: e.target.value }))}>
-                  <option value="">-- เลือกกลุ่มสาขา --</option>
-                  {programGroupsForLevel(programGroups, form.education_level).map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
-                </select>
+                <Label>กลุ่มสาขาวิชา (ดึงอัตโนมัติ)</Label>
+                <div className="flex h-10 w-full items-center rounded-md border bg-muted px-3 text-sm">
+                  {programGroups.find((g: any) => g.id === form.program_group_id)?.name || <span className="text-destructive">บุตรยังไม่ได้ระบุกลุ่มสาขา</span>}
+                </div>
               </div>
             )}
             <div className="col-span-2 rounded-md bg-accent/40 px-3 py-2 text-sm">
