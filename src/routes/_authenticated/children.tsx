@@ -44,17 +44,18 @@ function ChildrenPage() {
     const visible = showsSubsidy(f.school_type, f.education_level);
     const subsidy_type = visible ? (!f.subsidy_type || f.subsidy_type === "none" ? "subsidized" : f.subsidy_type) : "none";
     const validIds = programGroupsForLevel(programGroups, f.education_level).map((g: any) => g.id);
-    const program_group_id = isVocational(f.education_level) && validIds.includes(f.program_group_id) ? f.program_group_id : "";
+    const program_group_id = showsProgramGroup(f.school_type, f.education_level) && validIds.includes(f.program_group_id) ? f.program_group_id : "";
     return { ...f, subsidy_type, program_group_id };
   };
   const subsidyVisible = showsSubsidy(form.school_type, form.education_level);
+  const programGroupVisible = showsProgramGroup(form.school_type, form.education_level);
   const groupOptions = programGroupsForLevel(programGroups, form.education_level);
 
 
   const save = async () => {
     if (!form.guardian_id) return toast.error("กรุณาเลือกผู้มีสิทธิ");
-    const voc = isVocational(form.education_level);
-    if (voc && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาต้องเลือกกลุ่มสาขาวิชา");
+    const needsGroup = showsProgramGroup(form.school_type, form.education_level);
+    if (needsGroup && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาเอกชนต้องเลือกกลุ่มสาขาวิชา");
     const { guardians, ...rest } = form;
     const payload = {
       ...rest,
