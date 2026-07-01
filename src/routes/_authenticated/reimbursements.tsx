@@ -120,9 +120,6 @@ function ReimbPage() {
     const pg = child?.program_group_id || edu?.program_group_id || "";
     setForm(applyAll({ ...form, child_id: childId, study_place: place, education_level: lvl, school_type: st, subsidy_type: subsidy, program_group_id: pg }));
   };
-  const updateLevel = (lvl: any) => {
-    setForm(applyAll({ ...form, education_level: lvl }));
-  };
 
   const setAmount = (key: "sem1_amount" | "sem2_amount", val: number) => {
     setForm(applyRate({ ...form, [key]: val }));
