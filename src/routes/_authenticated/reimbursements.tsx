@@ -232,11 +232,11 @@ function ReimbPage() {
                     <td>{EDU_LEVEL_LABEL[r.education_level]}</td>
                     <td className="text-center">{SCHOOL_TYPE_LABEL[r.school_type]}</td>
                     <td className="text-right">{formatTHB(r.entitled_amount)}</td>
-                    <td className="text-xs">{formatThaiDate(r.sem1_pay_date)}</td>
-                    <td className="text-xs">{r.sem1_doc_no || "-"}<br/>{r.sem1_receipt_no}<br/>{formatThaiDate(r.sem1_receipt_date)}</td>
+                    <td className="text-xs">{formatThaiDateShort(r.sem1_pay_date)}</td>
+                    <td className="text-xs">{r.sem1_doc_no || "-"}<br/>{r.sem1_receipt_no}<br/>{formatThaiDateShort(r.sem1_receipt_date)}</td>
                     <td className="text-right">{formatTHB(r.sem1_amount)}</td>
-                    <td className="text-xs">{formatThaiDate(r.sem2_pay_date)}</td>
-                    <td className="text-xs">{r.sem2_doc_no || "-"}<br/>{r.sem2_receipt_no}<br/>{formatThaiDate(r.sem2_receipt_date)}</td>
+                    <td className="text-xs">{formatThaiDateShort(r.sem2_pay_date)}</td>
+                    <td className="text-xs">{r.sem2_doc_no || "-"}<br/>{r.sem2_receipt_no}<br/>{formatThaiDateShort(r.sem2_receipt_date)}</td>
                     <td className="text-right">{formatTHB(r.sem2_amount)}</td>
                     <td className="text-right font-semibold">{formatTHB(rem)}</td>
                     <td>{r.remark || "-"}</td>
