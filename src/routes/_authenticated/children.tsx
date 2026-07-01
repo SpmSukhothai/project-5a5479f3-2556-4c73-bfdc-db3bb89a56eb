@@ -291,6 +291,7 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
                 <Label>ประเภทสถานศึกษา</Label>
                 <Select value={schoolType} onValueChange={(v) => {
                   setSchoolType(v);
+                  if (!showsProgramGroup(v, level)) setProgramGroupId("");
                   if (!showsSubsidy(v, level)) setSubsidyType("none");
                   else if (subsidyType === "none") setSubsidyType("subsidized");
                 }}>
