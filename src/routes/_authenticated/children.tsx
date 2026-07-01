@@ -308,7 +308,7 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
                   </Select>
                 </div>
               )}
-              {isVocational(level) && (
+              {showsProgramGroup(schoolType, level) && (
                 <div>
                   <Label>กลุ่มสาขาวิชา *</Label>
                   <Select value={programGroupId} onValueChange={setProgramGroupId}>
