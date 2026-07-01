@@ -60,7 +60,7 @@ function ChildrenPage() {
     const payload = {
       ...rest,
       education_level: form.education_level || null,
-      program_group_id: voc ? form.program_group_id || null : null,
+      program_group_id: needsGroup ? form.program_group_id || null : null,
     };
     const res = editing
       ? await supabase.from("children").update(payload).eq("id", editing.id)
