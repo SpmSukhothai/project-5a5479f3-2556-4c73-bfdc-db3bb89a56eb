@@ -234,9 +234,9 @@ function EducationHistoryDialog({ child, onClose }: { child: any; onClose: () =>
 
   const submit = async () => {
     if (!studyPlace.trim()) return toast.error("กรุณากรอกสถานศึกษา");
-    const voc = isVocational(level);
-    if (voc && !programGroupId) return toast.error("ระดับอาชีวศึกษาต้องเลือกกลุ่มสาขาวิชา");
-    const pg = voc ? programGroupId || null : null;
+    const needsGroup = showsProgramGroup(schoolType, level);
+    if (needsGroup && !programGroupId) return toast.error("ระดับอาชีวศึกษาเอกชนต้องเลือกกลุ่มสาขาวิชา");
+    const pg = needsGroup ? programGroupId || null : null;
     const { error } = await supabase.from("child_education_history").insert({
       child_id: child.id, study_place: studyPlace.trim(), education_level: (level || null) as any, school_type: schoolType as any,
       subsidy_type: subsidyType as any, program_group_id: pg,
