@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pencil, Trash2, Plus } from "lucide-react";
@@ -23,6 +24,7 @@ import {
   programGroupsForLevel,
   formatTHB,
 } from "@/lib/labels";
+import { CurrencyInput } from "@/components/CurrencyInput";
 import { useAuth } from "@/hooks/use-auth";
 import { Navigate } from "@tanstack/react-router";
 
@@ -34,10 +36,11 @@ const emptyForm = {
   education_level: "primary",
   program_group_id: "",
   reimbursement_type: "fixed_amount",
-  reimbursement_percent: "",
   academic_year: 2569,
   max_amount: 0,
 };
+
+const ROLE_LABEL: Record<string, string> = { admin: "ผู้ดูแลระบบ", finance: "การเงิน" };
 
 function Settings() {
   const { role } = useAuth();
@@ -45,6 +48,8 @@ function Settings() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState<any>({ ...emptyForm });
+
+  const isAdmin = role === "admin";
 
   const { data: rates = [] } = useQuery({
     queryKey: ["rates-admin"],
@@ -61,11 +66,26 @@ function Settings() {
     queryFn: async () => (await supabase.from("program_groups").select("*").eq("active", true).order("name")).data ?? [],
   });
 
-  if (role && role !== "admin") return <Navigate to="/dashboard" />;
+  // รายชื่อผู้ใช้ + สิทธิการเข้าใช้งานระบบ
+  const { data: users = [] } = useQuery({
+    queryKey: ["users-roles"],
+    queryFn: async () => {
+      const [{ data: profiles }, { data: roles }] = await Promise.all([
+        supabase.from("profiles").select("id, email, full_name").order("full_name"),
+        supabase.from("user_roles").select("user_id, role"),
+      ]);
+      return (profiles ?? []).map((p: any) => ({
+        ...p,
+        roles: (roles ?? []).filter((r: any) => r.user_id === p.id).map((r: any) => r.role),
+      }));
+    },
+  });
 
-  const openNew = () => {
+  if (role && role !== "admin" && role !== "finance") return <Navigate to="/dashboard" />;
+
+  const openNew = (schoolType: "government" | "private") => {
     setEditing(null);
-    setForm({ ...emptyForm });
+    setForm({ ...emptyForm, school_type: schoolType });
     setOpen(true);
   };
   const openEdit = (r: any) => {
@@ -76,7 +96,6 @@ function Settings() {
       education_level: r.education_level,
       program_group_id: r.program_group_id ?? "",
       reimbursement_type: r.reimbursement_type,
-      reimbursement_percent: r.reimbursement_percent ?? "",
       academic_year: r.academic_year,
       max_amount: Number(r.max_amount),
     });
@@ -84,7 +103,6 @@ function Settings() {
   };
 
   const voc = isVocational(form.education_level);
-  const needPercent = form.reimbursement_type !== "fixed_amount";
   const subsidyVisible = showsSubsidy(form.school_type, form.education_level);
   const groupOptions = programGroupsForLevel(programGroups, form.education_level);
 
@@ -105,7 +123,7 @@ function Settings() {
       education_level: form.education_level,
       program_group_id: voc ? form.program_group_id || null : null,
       reimbursement_type: form.reimbursement_type,
-      reimbursement_percent: needPercent && form.reimbursement_percent !== "" ? Number(form.reimbursement_percent) : null,
+      reimbursement_percent: null,
       academic_year: Number(form.academic_year),
       max_amount: Number(form.max_amount),
     };
@@ -126,72 +144,141 @@ function Settings() {
     qc.invalidateQueries({ queryKey: ["rates-admin"] });
   };
 
+  const govRates = rates.filter((r: any) => r.school_type === "government");
+  const privateRates = rates.filter((r: any) => r.school_type === "private");
+
+  const RateTable = ({ list, showSubsidy }: { list: any[]; showSubsidy: boolean }) => (
+    <div className="overflow-x-auto">
+      <table className="gov-table">
+        <thead>
+          <tr>
+            <th>ปีการศึกษา</th>
+            <th>ระดับชั้น</th>
+            {showSubsidy && <th>เงินอุดหนุน</th>}
+            <th>กลุ่มสาขาวิชา</th>
+            <th>รูปแบบการเบิก</th>
+            <th>เพดาน (บาท/ปี)</th>
+            {isAdmin && <th style={{ width: 100 }}>จัดการ</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {list.map((r: any) => (
+            <tr key={r.id}>
+              <td className="text-center">{r.academic_year}</td>
+              <td>{EDU_LEVEL_LABEL[r.education_level]}</td>
+              {showSubsidy && <td>{SUBSIDY_TYPE_LABEL[r.subsidy_type]}</td>}
+              <td>{r.program_groups?.name || "-"}</td>
+              <td>{REIMBURSEMENT_TYPE_LABEL[r.reimbursement_type]}</td>
+              <td className="text-right">{formatTHB(r.max_amount)}</td>
+              {isAdmin && (
+                <td>
+                  <div className="flex gap-1">
+                    <Button size="icon" variant="ghost" onClick={() => openEdit(r)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => remove(r.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </td>
+              )}
+            </tr>
+          ))}
+          {list.length === 0 && (
+            <tr>
+              <td colSpan={showSubsidy ? (isAdmin ? 7 : 6) : isAdmin ? 6 : 5} className="text-center text-muted-foreground">
+                ยังไม่มีอัตรา
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">ตั้งค่าระบบ</h1>
-          <p className="text-sm text-muted-foreground">จัดการอัตราการเบิกค่าการศึกษาบุตร</p>
-        </div>
-        <Button onClick={openNew}>
-          <Plus className="mr-2 h-4 w-4" />
-          เพิ่มอัตรา
-        </Button>
+      <div>
+        <h1 className="text-2xl font-bold">ตั้งค่าระบบ</h1>
+        <p className="text-sm text-muted-foreground">จัดการอัตราการเบิกค่าการศึกษาบุตร และสิทธิการเข้าใช้งาน</p>
       </div>
 
+      {/* สิทธิการเข้าใช้งานระบบ */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">อัตราการเบิก</CardTitle>
+          <CardTitle className="text-base">สิทธิการเข้าใช้งานระบบ</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="gov-table">
               <thead>
                 <tr>
-                  <th>ปีการศึกษา</th>
-                  <th>ประเภทโรงเรียน</th>
-                  <th>เงินอุดหนุน</th>
-                  <th>ระดับชั้น</th>
-                  <th>กลุ่มสาขาวิชา</th>
-                  <th>รูปแบบการเบิก</th>
-                  <th>%</th>
-                  <th>เพดาน (บาท/ปี)</th>
-                  <th style={{ width: 100 }}>จัดการ</th>
+                  <th style={{ width: 50 }}>ลำดับ</th>
+                  <th>ชื่อ-นามสกุล</th>
+                  <th>อีเมล</th>
+                  <th>สิทธิการเข้าใช้</th>
                 </tr>
               </thead>
               <tbody>
-                {rates.map((r: any) => (
-                  <tr key={r.id}>
-                    <td className="text-center">{r.academic_year}</td>
-                    <td>{SCHOOL_TYPE_LABEL[r.school_type]}</td>
-                    <td>{SUBSIDY_TYPE_LABEL[r.subsidy_type]}</td>
-                    <td>{EDU_LEVEL_LABEL[r.education_level]}</td>
-                    <td>{r.program_groups?.name || "-"}</td>
-                    <td>{REIMBURSEMENT_TYPE_LABEL[r.reimbursement_type]}</td>
-                    <td className="text-center">{r.reimbursement_percent ?? "-"}</td>
-                    <td className="text-right">{formatTHB(r.max_amount)}</td>
+                {users.map((u: any, i: number) => (
+                  <tr key={u.id}>
+                    <td className="text-center">{i + 1}</td>
+                    <td>{u.full_name || "-"}</td>
+                    <td>{u.email || "-"}</td>
                     <td>
-                      <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => openEdit(r)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" onClick={() => remove(r.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                      <div className="flex flex-wrap gap-1">
+                        {u.roles.length === 0 && <span className="text-muted-foreground">ไม่มีสิทธิ</span>}
+                        {u.roles.map((r: string) => (
+                          <Badge key={r} variant={r === "admin" ? "default" : "secondary"}>
+                            {ROLE_LABEL[r] || r}
+                          </Badge>
+                        ))}
                       </div>
                     </td>
                   </tr>
                 ))}
-                {rates.length === 0 && (
+                {users.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="text-center text-muted-foreground">
-                      ยังไม่มีอัตรา
+                    <td colSpan={4} className="text-center text-muted-foreground">
+                      ยังไม่มีผู้ใช้งาน
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* อัตราสถานศึกษาราชการ */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-base">อัตราเงินค่าเล่าเรียน — สถานศึกษาของทางราชการ</CardTitle>
+          {isAdmin && (
+            <Button size="sm" onClick={() => openNew("government")}>
+              <Plus className="mr-2 h-4 w-4" />
+              เพิ่มอัตรา
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          <RateTable list={govRates} showSubsidy={false} />
+        </CardContent>
+      </Card>
+
+      {/* อัตราสถานศึกษาเอกชน */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-base">อัตราเงินค่าเล่าเรียน — สถานศึกษาของเอกชน</CardTitle>
+          {isAdmin && (
+            <Button size="sm" onClick={() => openNew("private")}>
+              <Plus className="mr-2 h-4 w-4" />
+              เพิ่มอัตรา
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          <RateTable list={privateRates} showSubsidy={true} />
         </CardContent>
       </Card>
 
@@ -284,19 +371,9 @@ function Settings() {
                 </SelectContent>
               </Select>
             </div>
-            {needPercent && (
-              <div>
-                <Label>เปอร์เซ็นต์ (%)</Label>
-                <Input
-                  type="number"
-                  value={form.reimbursement_percent}
-                  onChange={(e) => setForm({ ...form, reimbursement_percent: e.target.value })}
-                />
-              </div>
-            )}
             <div className="col-span-2">
               <Label>เพดานสูงสุด (บาท/ปี)</Label>
-              <Input type="number" value={form.max_amount} onChange={(e) => setForm({ ...form, max_amount: Number(e.target.value) })} />
+              <CurrencyInput value={form.max_amount} onChange={(v) => setForm({ ...form, max_amount: v })} />
             </div>
           </div>
           <DialogFooter>
