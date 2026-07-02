@@ -42,9 +42,9 @@ export const SUBSIDY_TYPES = ["none", "subsidized", "non_subsidized"] as const;
 // ตัวเลือกเงินอุดหนุนสำหรับสถานศึกษาเอกชน (ไม่มี none)
 export const PRIVATE_SUBSIDY_TYPES = ["subsidized", "non_subsidized"] as const;
 
-// แสดงตัวเลือกเงินอุดหนุนเฉพาะ "เอกชน" และไม่ใช่ระดับ ปวส.
+// แสดงตัวเลือกเงินอุดหนุนเฉพาะ "เอกชน" และไม่ใช่ระดับ ปวส. หรือ ปริญญาตรี
 export function showsSubsidy(schoolType?: string | null, educationLevel?: string | null) {
-  return schoolType === "private" && educationLevel !== "higher_vocational";
+  return schoolType === "private" && educationLevel !== "higher_vocational" && educationLevel !== "bachelor";
 }
 
 // แสดง/บังคับกลุ่มสาขาวิชาเฉพาะระดับอาชีวศึกษา (ปวช./ปวส.) ที่เป็น "เอกชน"
