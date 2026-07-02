@@ -59,12 +59,12 @@ export function programGroupsForLevel(groups: any[], level?: string | null) {
 }
 
 export const REIMBURSEMENT_TYPE_LABEL: Record<string, string> = {
-  fixed_amount: "เบิกตามเพดาน",
+  fixed_amount: "ปีการศึกษาละไม่เกิน",
   half_of_actual: "เบิกครึ่งหนึ่งของจ่ายจริง",
   percentage: "เบิกตามเปอร์เซ็นต์",
 };
 
-export const REIMBURSEMENT_TYPES = ["fixed_amount", "half_of_actual", "percentage"] as const;
+export const REIMBURSEMENT_TYPES = ["fixed_amount", "half_of_actual"] as const;
 
 // คำนวณสิทธิที่เบิกได้จาก rate และยอดจ่ายจริง
 export function computeEntitled(
