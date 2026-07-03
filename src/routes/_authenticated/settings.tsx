@@ -275,23 +275,39 @@ function Settings() {
           )}
         </CardHeader>
         <CardContent>
-          <RateTable list={govRates} showSubsidy={false} />
+          <RateTable list={govRates} showSubsidy={false} showProgramGroup={false} />
         </CardContent>
       </Card>
 
-      {/* อัตราสถานศึกษาเอกชน */}
+      {/* อัตราสถานศึกษาเอกชน — ได้รับเงินอุดหนุน */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="text-base">อัตราเงินค่าเล่าเรียน — สถานศึกษาของเอกชน</CardTitle>
+          <CardTitle className="text-base">อัตราเงินค่าเล่าเรียน — สถานศึกษาของเอกชน (ได้รับเงินอุดหนุน)</CardTitle>
           {isAdmin && (
-            <Button size="sm" onClick={() => openNew("private")}>
+            <Button size="sm" onClick={() => openNew("private", "subsidized")}>
               <Plus className="mr-2 h-4 w-4" />
               เพิ่มอัตรา
             </Button>
           )}
         </CardHeader>
         <CardContent>
-          <RateTable list={privateRates} showSubsidy={true} />
+          <RateTable list={privateSubsidized} showSubsidy={false} showProgramGroup={true} />
+        </CardContent>
+      </Card>
+
+      {/* อัตราสถานศึกษาเอกชน — ไม่ได้รับเงินอุดหนุน */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-base">อัตราเงินค่าเล่าเรียน — สถานศึกษาของเอกชน (ไม่ได้รับเงินอุดหนุน)</CardTitle>
+          {isAdmin && (
+            <Button size="sm" onClick={() => openNew("private", "non_subsidized")}>
+              <Plus className="mr-2 h-4 w-4" />
+              เพิ่มอัตรา
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          <RateTable list={privateNonSubsidized} showSubsidy={false} showProgramGroup={true} />
         </CardContent>
       </Card>
 
