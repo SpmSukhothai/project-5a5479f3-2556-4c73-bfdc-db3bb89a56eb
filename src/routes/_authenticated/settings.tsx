@@ -83,9 +83,9 @@ function Settings() {
 
   if (role && role !== "admin" && role !== "finance") return <Navigate to="/dashboard" />;
 
-  const openNew = (schoolType: "government" | "private") => {
+  const openNew = (schoolType: "government" | "private", subsidyType: "none" | "subsidized" | "non_subsidized" = "none") => {
     setEditing(null);
-    setForm({ ...emptyForm, school_type: schoolType });
+    setForm({ ...emptyForm, school_type: schoolType, subsidy_type: subsidyType });
     setOpen(true);
   };
   const openEdit = (r: any) => {
