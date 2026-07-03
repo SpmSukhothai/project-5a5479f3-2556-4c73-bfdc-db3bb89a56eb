@@ -119,12 +119,12 @@ function Settings() {
   };
 
   const save = async () => {
-    if (voc && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาต้องเลือกกลุ่มสาขาวิชา");
+    if (programGroupVisible && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาเอกชนต้องเลือกกลุ่มสาขาวิชา");
     const payload: any = {
       school_type: form.school_type,
       subsidy_type: form.subsidy_type,
       education_level: form.education_level,
-      program_group_id: voc ? form.program_group_id || null : null,
+      program_group_id: programGroupVisible ? form.program_group_id || null : null,
       reimbursement_type: form.reimbursement_type,
       reimbursement_percent: null,
       academic_year: Number(form.academic_year),
