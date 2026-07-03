@@ -83,9 +83,9 @@ function Settings() {
 
   if (role && role !== "admin" && role !== "finance") return <Navigate to="/dashboard" />;
 
-  const openNew = (schoolType: "government" | "private") => {
+  const openNew = (schoolType: "government" | "private", subsidyType: "none" | "subsidized" | "non_subsidized" = "none") => {
     setEditing(null);
-    setForm({ ...emptyForm, school_type: schoolType });
+    setForm({ ...emptyForm, school_type: schoolType, subsidy_type: subsidyType });
     setOpen(true);
   };
   const openEdit = (r: any) => {
@@ -146,8 +146,20 @@ function Settings() {
 
   const govRates = rates.filter((r: any) => r.school_type === "government");
   const privateRates = rates.filter((r: any) => r.school_type === "private");
+  const privateSubsidized = privateRates.filter((r: any) => r.subsidy_type === "subsidized");
+  const privateNonSubsidized = privateRates.filter((r: any) => r.subsidy_type === "non_subsidized");
 
-  const RateTable = ({ list, showSubsidy }: { list: any[]; showSubsidy: boolean }) => (
+  const RateTable = ({
+    list,
+    showSubsidy,
+    showProgramGroup,
+  }: {
+    list: any[];
+    showSubsidy: boolean;
+    showProgramGroup: boolean;
+  }) => {
+    const colCount = 4 + (showSubsidy ? 1 : 0) + (showProgramGroup ? 1 : 0) + (isAdmin ? 1 : 0);
+    return (
     <div className="overflow-x-auto">
       <table className="gov-table">
         <thead>
@@ -155,7 +167,7 @@ function Settings() {
             <th>ปีการศึกษา</th>
             <th>ระดับชั้น</th>
             {showSubsidy && <th>เงินอุดหนุน</th>}
-            <th>กลุ่มสาขาวิชา</th>
+            {showProgramGroup && <th>กลุ่มสาขาวิชา</th>}
             <th>รูปแบบการเบิก</th>
             <th>เพดาน (บาท/ปี)</th>
             {isAdmin && <th style={{ width: 100 }}>จัดการ</th>}
@@ -167,7 +179,7 @@ function Settings() {
               <td className="text-center">{r.academic_year}</td>
               <td>{EDU_LEVEL_LABEL[r.education_level]}</td>
               {showSubsidy && <td>{SUBSIDY_TYPE_LABEL[r.subsidy_type]}</td>}
-              <td>{r.program_groups?.name || "-"}</td>
+              {showProgramGroup && <td>{r.program_groups?.name || "-"}</td>}
               <td>{REIMBURSEMENT_TYPE_LABEL[r.reimbursement_type]}</td>
               <td className="text-right">{formatTHB(r.max_amount)}</td>
               {isAdmin && (
@@ -186,7 +198,7 @@ function Settings() {
           ))}
           {list.length === 0 && (
             <tr>
-              <td colSpan={showSubsidy ? (isAdmin ? 7 : 6) : isAdmin ? 6 : 5} className="text-center text-muted-foreground">
+              <td colSpan={colCount} className="text-center text-muted-foreground">
                 ยังไม่มีอัตรา
               </td>
             </tr>
@@ -194,7 +206,8 @@ function Settings() {
         </tbody>
       </table>
     </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -262,23 +275,39 @@ function Settings() {
           )}
         </CardHeader>
         <CardContent>
-          <RateTable list={govRates} showSubsidy={false} />
+          <RateTable list={govRates} showSubsidy={false} showProgramGroup={false} />
         </CardContent>
       </Card>
 
-      {/* อัตราสถานศึกษาเอกชน */}
+      {/* อัตราสถานศึกษาเอกชน — ได้รับเงินอุดหนุน */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="text-base">อัตราเงินค่าเล่าเรียน — สถานศึกษาของเอกชน</CardTitle>
+          <CardTitle className="text-base">อัตราเงินค่าเล่าเรียน — สถานศึกษาของเอกชน (ได้รับเงินอุดหนุน)</CardTitle>
           {isAdmin && (
-            <Button size="sm" onClick={() => openNew("private")}>
+            <Button size="sm" onClick={() => openNew("private", "subsidized")}>
               <Plus className="mr-2 h-4 w-4" />
               เพิ่มอัตรา
             </Button>
           )}
         </CardHeader>
         <CardContent>
-          <RateTable list={privateRates} showSubsidy={true} />
+          <RateTable list={privateSubsidized} showSubsidy={false} showProgramGroup={true} />
+        </CardContent>
+      </Card>
+
+      {/* อัตราสถานศึกษาเอกชน — ไม่ได้รับเงินอุดหนุน */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-base">อัตราเงินค่าเล่าเรียน — สถานศึกษาของเอกชน (ไม่ได้รับเงินอุดหนุน)</CardTitle>
+          {isAdmin && (
+            <Button size="sm" onClick={() => openNew("private", "non_subsidized")}>
+              <Plus className="mr-2 h-4 w-4" />
+              เพิ่มอัตรา
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          <RateTable list={privateNonSubsidized} showSubsidy={false} showProgramGroup={true} />
         </CardContent>
       </Card>
 
