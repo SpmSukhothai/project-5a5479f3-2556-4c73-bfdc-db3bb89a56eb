@@ -21,7 +21,9 @@ import {
   REIMBURSEMENT_TYPES,
   isVocational,
   showsSubsidy,
+  showsProgramGroup,
   programGroupsForLevel,
+  eduLevelLabel,
   formatTHB,
 } from "@/lib/labels";
 import { CurrencyInput } from "@/components/CurrencyInput";
@@ -102,7 +104,8 @@ function Settings() {
     setOpen(true);
   };
 
-  const voc = isVocational(form.education_level);
+  
+  const programGroupVisible = showsProgramGroup(form.school_type, form.education_level);
   const subsidyVisible = showsSubsidy(form.school_type, form.education_level);
   const groupOptions = programGroupsForLevel(programGroups, form.education_level);
 
@@ -116,12 +119,12 @@ function Settings() {
   };
 
   const save = async () => {
-    if (voc && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาต้องเลือกกลุ่มสาขาวิชา");
+    if (programGroupVisible && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาเอกชนต้องเลือกกลุ่มสาขาวิชา");
     const payload: any = {
       school_type: form.school_type,
       subsidy_type: form.subsidy_type,
       education_level: form.education_level,
-      program_group_id: voc ? form.program_group_id || null : null,
+      program_group_id: programGroupVisible ? form.program_group_id || null : null,
       reimbursement_type: form.reimbursement_type,
       reimbursement_percent: null,
       academic_year: Number(form.academic_year),
@@ -177,7 +180,7 @@ function Settings() {
           {list.map((r: any) => (
             <tr key={r.id}>
               <td className="text-center">{r.academic_year}</td>
-              <td>{EDU_LEVEL_LABEL[r.education_level]}</td>
+              <td>{eduLevelLabel(r.education_level, r.school_type)}</td>
               {showSubsidy && <td>{SUBSIDY_TYPE_LABEL[r.subsidy_type]}</td>}
               {showProgramGroup && <td>{r.program_groups?.name || "-"}</td>}
               <td>{REIMBURSEMENT_TYPE_LABEL[r.reimbursement_type]}</td>
@@ -345,7 +348,7 @@ function Settings() {
                 <SelectContent>
                   {EDU_LEVELS.map((lv) => (
                     <SelectItem key={lv} value={lv}>
-                      {EDU_LEVEL_LABEL[lv]}
+                      {eduLevelLabel(lv, form.school_type)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -368,7 +371,7 @@ function Settings() {
                 </Select>
               </div>
             )}
-            {voc && (
+            {programGroupVisible && (
               <div className="col-span-2">
                 <Label>กลุ่มสาขาวิชา *</Label>
                 <Select value={form.program_group_id} onValueChange={(v) => setForm({ ...form, program_group_id: v })}>

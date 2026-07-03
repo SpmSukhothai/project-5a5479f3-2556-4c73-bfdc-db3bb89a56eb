@@ -14,6 +14,13 @@ export const SCHOOL_TYPE_LABEL: Record<string, string> = {
   private: "เอกชน",
 };
 
+// แสดงชื่อระดับชั้นตามประเภทโรงเรียน (ราชการ: ปวส. => อนุปริญญา)
+export function eduLevelLabel(level?: string | null, schoolType?: string | null) {
+  if (!level) return "-";
+  if (level === "higher_vocational" && schoolType === "government") return "อนุปริญญา";
+  return EDU_LEVEL_LABEL[level] ?? level;
+}
+
 export const EDU_LEVELS = [
   "kindergarten",
   "primary",
