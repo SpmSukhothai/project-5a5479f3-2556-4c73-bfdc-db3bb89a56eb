@@ -198,7 +198,7 @@ function Settings() {
           ))}
           {list.length === 0 && (
             <tr>
-              <td colSpan={showSubsidy ? (isAdmin ? 7 : 6) : isAdmin ? 6 : 5} className="text-center text-muted-foreground">
+              <td colSpan={colCount} className="text-center text-muted-foreground">
                 ยังไม่มีอัตรา
               </td>
             </tr>
@@ -206,7 +206,8 @@ function Settings() {
         </tbody>
       </table>
     </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-6">
