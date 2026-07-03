@@ -104,7 +104,7 @@ function Settings() {
     setOpen(true);
   };
 
-  const voc = isVocational(form.education_level);
+  
   const programGroupVisible = showsProgramGroup(form.school_type, form.education_level);
   const subsidyVisible = showsSubsidy(form.school_type, form.education_level);
   const groupOptions = programGroupsForLevel(programGroups, form.education_level);
