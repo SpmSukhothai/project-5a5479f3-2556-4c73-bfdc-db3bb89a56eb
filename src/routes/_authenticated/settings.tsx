@@ -179,7 +179,7 @@ function Settings() {
               <td className="text-center">{r.academic_year}</td>
               <td>{EDU_LEVEL_LABEL[r.education_level]}</td>
               {showSubsidy && <td>{SUBSIDY_TYPE_LABEL[r.subsidy_type]}</td>}
-              <td>{r.program_groups?.name || "-"}</td>
+              {showProgramGroup && <td>{r.program_groups?.name || "-"}</td>}
               <td>{REIMBURSEMENT_TYPE_LABEL[r.reimbursement_type]}</td>
               <td className="text-right">{formatTHB(r.max_amount)}</td>
               {isAdmin && (
