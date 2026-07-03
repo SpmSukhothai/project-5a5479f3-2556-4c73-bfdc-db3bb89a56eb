@@ -371,7 +371,7 @@ function Settings() {
                 </Select>
               </div>
             )}
-            {voc && (
+            {programGroupVisible && (
               <div className="col-span-2">
                 <Label>กลุ่มสาขาวิชา *</Label>
                 <Select value={form.program_group_id} onValueChange={(v) => setForm({ ...form, program_group_id: v })}>
