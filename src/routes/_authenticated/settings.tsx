@@ -348,7 +348,7 @@ function Settings() {
                 <SelectContent>
                   {EDU_LEVELS.map((lv) => (
                     <SelectItem key={lv} value={lv}>
-                      {EDU_LEVEL_LABEL[lv]}
+                      {eduLevelLabel(lv, form.school_type)}
                     </SelectItem>
                   ))}
                 </SelectContent>
