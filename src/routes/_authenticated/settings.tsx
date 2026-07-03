@@ -146,8 +146,20 @@ function Settings() {
 
   const govRates = rates.filter((r: any) => r.school_type === "government");
   const privateRates = rates.filter((r: any) => r.school_type === "private");
+  const privateSubsidized = privateRates.filter((r: any) => r.subsidy_type === "subsidized");
+  const privateNonSubsidized = privateRates.filter((r: any) => r.subsidy_type === "non_subsidized");
 
-  const RateTable = ({ list, showSubsidy }: { list: any[]; showSubsidy: boolean }) => (
+  const RateTable = ({
+    list,
+    showSubsidy,
+    showProgramGroup,
+  }: {
+    list: any[];
+    showSubsidy: boolean;
+    showProgramGroup: boolean;
+  }) => {
+    const colCount = 4 + (showSubsidy ? 1 : 0) + (showProgramGroup ? 1 : 0) + (isAdmin ? 1 : 0);
+    return (
     <div className="overflow-x-auto">
       <table className="gov-table">
         <thead>
@@ -155,7 +167,7 @@ function Settings() {
             <th>ปีการศึกษา</th>
             <th>ระดับชั้น</th>
             {showSubsidy && <th>เงินอุดหนุน</th>}
-            <th>กลุ่มสาขาวิชา</th>
+            {showProgramGroup && <th>กลุ่มสาขาวิชา</th>}
             <th>รูปแบบการเบิก</th>
             <th>เพดาน (บาท/ปี)</th>
             {isAdmin && <th style={{ width: 100 }}>จัดการ</th>}
