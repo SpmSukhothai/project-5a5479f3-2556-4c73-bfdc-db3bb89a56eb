@@ -180,7 +180,7 @@ function Settings() {
           {list.map((r: any) => (
             <tr key={r.id}>
               <td className="text-center">{r.academic_year}</td>
-              <td>{EDU_LEVEL_LABEL[r.education_level]}</td>
+              <td>{eduLevelLabel(r.education_level, r.school_type)}</td>
               {showSubsidy && <td>{SUBSIDY_TYPE_LABEL[r.subsidy_type]}</td>}
               {showProgramGroup && <td>{r.program_groups?.name || "-"}</td>}
               <td>{REIMBURSEMENT_TYPE_LABEL[r.reimbursement_type]}</td>
