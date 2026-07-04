@@ -151,7 +151,9 @@ function Settings() {
   const govRates = rates.filter((r: any) => r.school_type === "government");
   const privateRates = rates.filter((r: any) => r.school_type === "private");
   const privateSubsidized = privateRates.filter((r: any) => r.subsidy_type === "subsidized");
-  const privateNonSubsidized = privateRates.filter((r: any) => r.subsidy_type === "non_subsidized");
+  const privateNonSubsidized = privateRates.filter(
+    (r: any) => r.subsidy_type === "non_subsidized" || !showsSubsidy(r.school_type, r.education_level),
+  );
 
   const RateTable = ({
     list,
