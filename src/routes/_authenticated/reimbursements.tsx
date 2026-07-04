@@ -5,9 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Printer, Trash2, Pencil } from "lucide-react";
+import { Plus, Search, Printer, Trash2, Pencil, Receipt, FileText, School, GraduationCap, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { EDU_LEVEL_LABEL, EDU_LEVELS, SCHOOL_TYPE_LABEL, SUBSIDY_TYPE_LABEL, REIMBURSEMENT_TYPE_LABEL, isVocational, showsSubsidy, showsProgramGroup, programGroupsForLevel, findRate, computeEntitled, formatTHB, formatThaiDate, formatThaiDateShort, ORG_NAME } from "@/lib/labels";
 import { useAuth } from "@/hooks/use-auth";
@@ -283,95 +285,177 @@ function ReimbPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editing ? "แก้ไขรายการเบิก" : "เพิ่มรายการเบิก"}</DialogTitle></DialogHeader>
-          <div className="grid grid-cols-2 gap-3">
-            <div><Label>ปีการศึกษา</Label><Input type="number" value={form.academic_year} onChange={(e) => setForm({ ...form, academic_year: Number(e.target.value) })} /></div>
-            <div>
-              <Label>ผู้มีสิทธิ *</Label>
-              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.guardian_id} onChange={(e) => setForm({ ...form, guardian_id: e.target.value, child_id: "" })}>
-                <option value="">-- เลือก --</option>
-                {guardians.map((g: any) => <option key={g.id} value={g.id}>{g.employee_code} — {g.prefix}{g.first_name} {g.last_name}</option>)}
-              </select>
-            </div>
-            <div>
-              <Label>บุตร *</Label>
-              <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.child_id} onChange={(e) => updateChild(e.target.value)}>
-                <option value="">-- เลือก --</option>
-                {filteredChildren.map((c: any) => <option key={c.id} value={c.id}>{c.child_name}</option>)}
-              </select>
-            </div>
-            <div>
-              <Label>โรงเรียนที่ศึกษา (ดึงอัตโนมัติจากข้อมูลบุตร)</Label>
-              <div className="flex h-10 w-full items-center rounded-md border bg-muted px-3 text-sm">
-                {form.study_place || (form.child_id ? <span className="text-destructive">บุตรยังไม่มีข้อมูลสถานศึกษาปัจจุบัน</span> : <span className="text-muted-foreground">เลือกบุตรก่อน</span>)}
-              </div>
-            </div>
-            <div>
-              <Label>ระดับชั้น (ดึงอัตโนมัติ)</Label>
-              <div className="flex h-10 w-full items-center rounded-md border bg-muted px-3 text-sm">
-                {form.child_id ? (EDU_LEVEL_LABEL[form.education_level] || "-") : <span className="text-muted-foreground">เลือกบุตรก่อน</span>}
-              </div>
-            </div>
-            <div>
-              <Label>ประเภทโรงเรียน (ดึงอัตโนมัติ)</Label>
-              <div className="flex h-10 w-full items-center rounded-md border bg-muted px-3 text-sm">
-                {form.child_id ? (SCHOOL_TYPE_LABEL[form.school_type] || "-") : <span className="text-muted-foreground">เลือกบุตรก่อน</span>}
-              </div>
-            </div>
-            {showsSubsidy(form.school_type, form.education_level) && (
+          <div className="space-y-4">
+            {/* ช่องที่ต้องเลือกจริง */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div>
-                <Label>เงินอุดหนุน (ดึงอัตโนมัติ)</Label>
-                <div className="flex h-10 w-full items-center rounded-md border bg-muted px-3 text-sm">
-                  {SUBSIDY_TYPE_LABEL[form.subsidy_type] || "-"}
+                <Label>ปีการศึกษา</Label>
+                <Input type="number" value={form.academic_year} onChange={(e) => setForm({ ...form, academic_year: Number(e.target.value) })} />
+              </div>
+              <div>
+                <Label>ผู้มีสิทธิ *</Label>
+                <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.guardian_id} onChange={(e) => setForm({ ...form, guardian_id: e.target.value, child_id: "" })}>
+                  <option value="">-- เลือก --</option>
+                  {guardians.map((g: any) => <option key={g.id} value={g.id}>{g.employee_code} — {g.prefix}{g.first_name} {g.last_name}</option>)}
+                </select>
+              </div>
+              <div>
+                <Label>บุตร *</Label>
+                <select className="flex h-10 w-full rounded-md border bg-background px-3" value={form.child_id} onChange={(e) => updateChild(e.target.value)}>
+                  <option value="">-- เลือก --</option>
+                  {filteredChildren.map((c: any) => <option key={c.id} value={c.id}>{c.child_name}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* ข้อมูลอัตโนมัติจากข้อมูลบุตร */}
+            <Card className="bg-muted/40 p-4">
+              <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                <School className="h-4 w-4" />
+                ข้อมูลจากทะเบียนบุตร (ดึงอัตโนมัติ)
+              </div>
+              {!form.child_id ? (
+                <p className="text-sm text-muted-foreground">เลือกบุตรก่อนเพื่อแสดงข้อมูลสถานศึกษา</p>
+              ) : (
+                <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+                  <div className="min-w-0">
+                    <div className="text-xs text-muted-foreground">โรงเรียนที่ศึกษา</div>
+                    <div className="truncate font-medium">
+                      {form.study_place || <span className="text-destructive">ยังไม่มีข้อมูลสถานศึกษาปัจจุบัน</span>}
+                    </div>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs text-muted-foreground">ระดับชั้น / ประเภทโรงเรียน</div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge variant="secondary">{EDU_LEVEL_LABEL[form.education_level] || "-"}</Badge>
+                      <Badge variant="outline">{SCHOOL_TYPE_LABEL[form.school_type] || "-"}</Badge>
+                    </div>
+                  </div>
+                  {showsSubsidy(form.school_type, form.education_level) && (
+                    <div className="min-w-0">
+                      <div className="text-xs text-muted-foreground">เงินอุดหนุน</div>
+                      <Badge variant="secondary">{SUBSIDY_TYPE_LABEL[form.subsidy_type] || "-"}</Badge>
+                    </div>
+                  )}
+                  {showsProgramGroup(form.school_type, form.education_level) && (
+                    <div className="min-w-0">
+                      <div className="text-xs text-muted-foreground">กลุ่มสาขาวิชา</div>
+                      <div className="truncate font-medium">
+                        {programGroups.find((g: any) => g.id === form.program_group_id)?.name || <span className="text-destructive">ยังไม่ได้ระบุกลุ่มสาขา</span>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </Card>
+
+            {/* สิทธิที่เบิกได้ (คำนวณอัตโนมัติ อ่านอย่างเดียว) */}
+            <Card className="flex flex-wrap items-center justify-between gap-3 bg-primary/5 p-4">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <GraduationCap className="h-4 w-4" />
+                  รูปแบบการเบิก
+                </div>
+                <div className="font-medium">
+                  {REIMBURSEMENT_TYPE_LABEL[form.reimbursement_type] || "-"}
+                  {form.reimbursement_type !== "fixed_amount" && form.reimbursement_percent != null && <> • {form.reimbursement_percent}% ของจ่ายจริง</>}
                 </div>
               </div>
-            )}
-            {showsProgramGroup(form.school_type, form.education_level) && (
-              <div>
-                <Label>กลุ่มสาขาวิชา (ดึงอัตโนมัติ)</Label>
-                <div className="flex h-10 w-full items-center rounded-md border bg-muted px-3 text-sm">
-                  {programGroups.find((g: any) => g.id === form.program_group_id)?.name || <span className="text-destructive">บุตรยังไม่ได้ระบุกลุ่มสาขา</span>}
+              <div className="text-right">
+                <div className="text-xs text-muted-foreground">สิทธิที่เบิกได้ (คำนวณอัตโนมัติ)</div>
+                <div className="text-2xl font-bold tabular-nums">{formatTHB(form.entitled_amount)} <span className="text-sm font-normal text-muted-foreground">บาท</span></div>
+              </div>
+            </Card>
+
+            {/* ภาคเรียน 1 / 2 */}
+            <Tabs defaultValue="sem1" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="sem1">ภาคเรียนที่ 1 · {formatTHB(form.sem1_amount)}</TabsTrigger>
+                <TabsTrigger value="sem2">ภาคเรียนที่ 2 · {formatTHB(form.sem2_amount)}</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="sem1">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div><Label>วันที่จ่ายเงิน</Label><ThaiDatePicker value={form.sem1_pay_date} onChange={(v) => setForm({ ...form, sem1_pay_date: v })} /></div>
+                  <div>
+                    <Label>เลขที่เอกสารจ่ายเงิน</Label>
+                    <div className="relative">
+                      <FileText className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input className="pl-9" value={form.sem1_doc_no} onChange={(e) => setForm({ ...form, sem1_doc_no: e.target.value })} />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>เลขที่ใบเสร็จ</Label>
+                    <div className="relative">
+                      <Receipt className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input className="pl-9" value={form.sem1_receipt_no} onChange={(e) => setForm({ ...form, sem1_receipt_no: e.target.value })} />
+                    </div>
+                  </div>
+                  <div><Label>วันที่ใบเสร็จ</Label><ThaiDatePicker value={form.sem1_receipt_date} onChange={(v) => setForm({ ...form, sem1_receipt_date: v })} /></div>
+                  <div className="sm:col-span-2">
+                    <Label>จำนวนเงิน (บาท)</Label>
+                    <div className="relative">
+                      <Wallet className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <CurrencyInput className="pl-9" value={form.sem1_amount} onChange={(v) => setAmount("sem1_amount", v)} />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
-            <div className="col-span-2 rounded-md bg-accent/40 px-3 py-2 text-sm">
-              รูปแบบการเบิก: <span className="font-semibold">{REIMBURSEMENT_TYPE_LABEL[form.reimbursement_type] || "-"}</span>
-              {form.reimbursement_type !== "fixed_amount" && form.reimbursement_percent != null && <> • {form.reimbursement_percent}% ของจ่ายจริง</>}
-            </div>
-            <div className="col-span-2"><Label>สิทธิที่เบิกได้ (บาท)</Label><CurrencyInput value={form.entitled_amount} onChange={(v) => setForm({ ...form, entitled_amount: v })} /></div>
+              </TabsContent>
 
+              <TabsContent value="sem2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div><Label>วันที่จ่ายเงิน</Label><ThaiDatePicker value={form.sem2_pay_date} onChange={(v) => setForm({ ...form, sem2_pay_date: v })} /></div>
+                  <div>
+                    <Label>เลขที่เอกสารจ่ายเงิน</Label>
+                    <div className="relative">
+                      <FileText className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input className="pl-9" value={form.sem2_doc_no} onChange={(e) => setForm({ ...form, sem2_doc_no: e.target.value })} />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>เลขที่ใบเสร็จ</Label>
+                    <div className="relative">
+                      <Receipt className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input className="pl-9" value={form.sem2_receipt_no} onChange={(e) => setForm({ ...form, sem2_receipt_no: e.target.value })} />
+                    </div>
+                  </div>
+                  <div><Label>วันที่ใบเสร็จ</Label><ThaiDatePicker value={form.sem2_receipt_date} onChange={(v) => setForm({ ...form, sem2_receipt_date: v })} /></div>
+                  <div className="sm:col-span-2">
+                    <Label>จำนวนเงิน (บาท)</Label>
+                    <div className="relative">
+                      <Wallet className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <CurrencyInput className="pl-9" value={form.sem2_amount} onChange={(v) => setAmount("sem2_amount", v)} />
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
 
-            <div className="col-span-2 mt-2 rounded-md border bg-muted/50 p-3">
-              <div className="mb-2 font-semibold">ภาคเรียนที่ 1</div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>วันที่จ่ายเงิน</Label><ThaiDatePicker value={form.sem1_pay_date} onChange={(v) => setForm({ ...form, sem1_pay_date: v })} /></div>
-                <div><Label>เลขที่เอกสารจ่ายเงิน</Label><Input value={form.sem1_doc_no} onChange={(e) => setForm({ ...form, sem1_doc_no: e.target.value })} /></div>
-                <div><Label>เลขที่ใบเสร็จ</Label><Input value={form.sem1_receipt_no} onChange={(e) => setForm({ ...form, sem1_receipt_no: e.target.value })} /></div>
-                <div><Label>วันที่ใบเสร็จ</Label><ThaiDatePicker value={form.sem1_receipt_date} onChange={(v) => setForm({ ...form, sem1_receipt_date: v })} /></div>
-                <div className="col-span-2"><Label>จำนวนเงิน (บาท)</Label><CurrencyInput value={form.sem1_amount} onChange={(v) => setAmount("sem1_amount", v)} /></div>
-              </div>
-            </div>
+            <div><Label>หมายเหตุ</Label><Input value={form.remark} onChange={(e) => setForm({ ...form, remark: e.target.value })} /></div>
 
-            <div className="col-span-2 rounded-md border bg-muted/50 p-3">
-              <div className="mb-2 font-semibold">ภาคเรียนที่ 2</div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>วันที่จ่ายเงิน</Label><ThaiDatePicker value={form.sem2_pay_date} onChange={(v) => setForm({ ...form, sem2_pay_date: v })} /></div>
-                <div><Label>เลขที่เอกสารจ่ายเงิน</Label><Input value={form.sem2_doc_no} onChange={(e) => setForm({ ...form, sem2_doc_no: e.target.value })} /></div>
-                <div><Label>เลขที่ใบเสร็จ</Label><Input value={form.sem2_receipt_no} onChange={(e) => setForm({ ...form, sem2_receipt_no: e.target.value })} /></div>
-                <div><Label>วันที่ใบเสร็จ</Label><ThaiDatePicker value={form.sem2_receipt_date} onChange={(v) => setForm({ ...form, sem2_receipt_date: v })} /></div>
-                <div className="col-span-2"><Label>จำนวนเงิน (บาท)</Label><CurrencyInput value={form.sem2_amount} onChange={(v) => setAmount("sem2_amount", v)} /></div>
-              </div>
-            </div>
-
-            <div className="col-span-2"><Label>หมายเหตุ</Label><Input value={form.remark} onChange={(e) => setForm({ ...form, remark: e.target.value })} /></div>
+            {/* สรุปยอด */}
             {(() => {
-              const remaining = form.entitled_amount - form.sem1_amount - form.sem2_amount;
+              const used = form.sem1_amount + form.sem2_amount;
+              const remaining = form.entitled_amount - used;
               const negative = remaining < 0;
               return (
-                <div className="col-span-2 rounded-md bg-accent/50 p-3 text-sm">
-                  <div>ยอดเบิกแล้ว: <span className="font-semibold">{formatTHB(form.sem1_amount + form.sem2_amount)}</span> บาท</div>
-                  <div>คงเหลือ: <span className={`font-semibold ${negative ? "text-destructive" : ""}`}>{formatTHB(remaining)}</span> บาท</div>
-                  {negative && <div className="mt-1 text-destructive">ยอดเบิกเกินสิทธิที่เบิกได้ ไม่สามารถบันทึกได้</div>}
-                </div>
+                <Card className="bg-secondary/60 p-4">
+                  <div className="grid grid-cols-3 gap-3 text-center">
+                    <div>
+                      <div className="text-xs text-muted-foreground">สิทธิที่เบิกได้</div>
+                      <div className="text-lg font-bold tabular-nums sm:text-xl">{formatTHB(form.entitled_amount)}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">ยอดเบิกแล้ว</div>
+                      <div className="text-lg font-bold tabular-nums sm:text-xl">{formatTHB(used)}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">คงเหลือ</div>
+                      <div className={`text-lg font-bold tabular-nums sm:text-xl ${negative ? "text-destructive" : "text-primary"}`}>{formatTHB(remaining)}</div>
+                    </div>
+                  </div>
+                  {negative && <div className="mt-2 text-center text-sm text-destructive">ยอดเบิกเกินสิทธิที่เบิกได้ ไม่สามารถบันทึกได้</div>}
+                </Card>
               );
             })()}
           </div>
