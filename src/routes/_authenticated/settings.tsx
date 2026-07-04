@@ -106,7 +106,8 @@ function Settings() {
 
   
   const programGroupVisible = showsProgramGroup(form.school_type, form.education_level);
-  const subsidyVisible = showsSubsidy(form.school_type, form.education_level);
+  // ซ่อนตัวเลือกเงินอุดหนุนเมื่ออยู่ในบริบทการ์ด "ได้รับเงินอุดหนุน" (subsidized) — ค่าถูกกำหนดไว้แล้ว
+  const subsidyVisible = showsSubsidy(form.school_type, form.education_level) && form.subsidy_type !== "subsidized";
   const groupOptions = programGroupsForLevel(programGroups, form.education_level);
 
   // ปรับค่า subsidy_type / program_group_id ให้สอดคล้องกับเงื่อนไขเมื่อเปลี่ยนโรงเรียน/ระดับ
@@ -150,7 +151,9 @@ function Settings() {
   const govRates = rates.filter((r: any) => r.school_type === "government");
   const privateRates = rates.filter((r: any) => r.school_type === "private");
   const privateSubsidized = privateRates.filter((r: any) => r.subsidy_type === "subsidized");
-  const privateNonSubsidized = privateRates.filter((r: any) => r.subsidy_type === "non_subsidized");
+  const privateNonSubsidized = privateRates.filter(
+    (r: any) => r.subsidy_type === "non_subsidized" || !showsSubsidy(r.school_type, r.education_level),
+  );
 
   const RateTable = ({
     list,
