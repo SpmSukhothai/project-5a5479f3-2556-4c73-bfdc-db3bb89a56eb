@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Printer, Trash2, Pencil, Receipt, FileText, School, GraduationCap, Wallet } from "lucide-react";
 import { toast } from "sonner";
-import { EDU_LEVEL_LABEL, EDU_LEVELS, SCHOOL_TYPE_LABEL, SUBSIDY_TYPE_LABEL, REIMBURSEMENT_TYPE_LABEL, isVocational, showsSubsidy, showsProgramGroup, programGroupsForLevel, findRate, computeEntitled, formatTHB, formatThaiDate, formatThaiDateShort, ORG_NAME } from "@/lib/labels";
+import { EDU_LEVEL_LABEL, EDU_LEVELS, SCHOOL_TYPE_LABEL, SUBSIDY_TYPE_LABEL, REIMBURSEMENT_TYPE_LABEL, isVocational, showsSubsidy, showsProgramGroup, programGroupsForLevel, findRate, computeEntitled, formatTHB, formatThaiDate, formatThaiDateShort, ORG_NAME, calcAge, isOverEligibleAge, MAX_ELIGIBLE_AGE } from "@/lib/labels";
 import { useAuth } from "@/hooks/use-auth";
 import { ThaiDatePicker } from "@/components/ThaiDatePicker";
 import { CurrencyInput } from "@/components/CurrencyInput";
