@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Printer, Trash2, Pencil, Receipt, FileText, School, GraduationCap, Wallet } from "lucide-react";
 import { toast } from "sonner";
-import { EDU_LEVEL_LABEL, EDU_LEVELS, SCHOOL_TYPE_LABEL, SUBSIDY_TYPE_LABEL, REIMBURSEMENT_TYPE_LABEL, isVocational, showsSubsidy, showsProgramGroup, programGroupsForLevel, findRate, computeEntitled, formatTHB, formatThaiDate, formatThaiDateShort, ORG_NAME } from "@/lib/labels";
+import { EDU_LEVEL_LABEL, EDU_LEVELS, SCHOOL_TYPE_LABEL, SUBSIDY_TYPE_LABEL, REIMBURSEMENT_TYPE_LABEL, isVocational, showsSubsidy, showsProgramGroup, programGroupsForLevel, findRate, computeEntitled, formatTHB, formatThaiDate, formatThaiDateShort, ORG_NAME, calcAge, isOverEligibleAge, MAX_ELIGIBLE_AGE } from "@/lib/labels";
 import { useAuth } from "@/hooks/use-auth";
 import { ThaiDatePicker } from "@/components/ThaiDatePicker";
 import { CurrencyInput } from "@/components/CurrencyInput";
@@ -61,7 +61,7 @@ function ReimbPage() {
       .eq("academic_year", year).order("registration_no")).data ?? [],
   });
   const { data: guardians = [] } = useQuery({ queryKey: ["g-list"], queryFn: async () => (await supabase.from("guardians").select("id, prefix, first_name, last_name, employee_code").order("employee_code")).data ?? [] });
-  const { data: children = [] } = useQuery({ queryKey: ["c-list"], queryFn: async () => (await supabase.from("children").select("id, child_name, guardian_id, study_place, education_level, school_type, subsidy_type, program_group_id").order("child_name")).data ?? [] });
+  const { data: children = [] } = useQuery({ queryKey: ["c-list"], queryFn: async () => (await supabase.from("children").select("id, child_name, birth_date, guardian_id, study_place, education_level, school_type, subsidy_type, program_group_id").order("child_name")).data ?? [] });
   const { data: eduHistory = [] } = useQuery({ queryKey: ["edu-current"], queryFn: async () => (await supabase.from("child_education_history").select("child_id, study_place, education_level, school_type, subsidy_type, program_group_id").eq("is_current", true)).data ?? [] });
   const { data: rates = [] } = useQuery({ queryKey: ["rates"], queryFn: async () => (await supabase.from("reimbursement_rates").select("*")).data ?? [] });
   const { data: programGroups = [] } = useQuery({ queryKey: ["program-groups"], queryFn: async () => (await supabase.from("program_groups").select("*").eq("active", true).order("name")).data ?? [] });
@@ -111,6 +111,11 @@ function ReimbPage() {
     form.school_type === "private" &&
     (form.education_level === "higher_vocational" || form.education_level === "bachelor");
 
+  // ระงับสิทธิเมื่อบุตรที่เลือกอายุเกิน 25 ปีบริบูรณ์
+  const selectedChild = children.find((c: any) => c.id === form.child_id);
+  const selectedAge = calcAge(selectedChild?.birth_date);
+  const isOverAge = isOverEligibleAge(selectedChild?.birth_date);
+
   // ปรับ subsidy_type / program_group_id ให้สอดคล้องกับเงื่อนไข แล้วคำนวณ rate ใหม่
   const normalizeForm = (f: Form): Form => {
     const visible = showsSubsidy(f.school_type, f.education_level);
@@ -124,6 +129,9 @@ function ReimbPage() {
   // auto-fill study place / level / type / subsidy / program group / entitlement from the child's data
   const updateChild = (childId: string) => {
     const child = children.find((c: any) => c.id === childId);
+    if (isOverEligibleAge(child?.birth_date)) {
+      toast.error(`ระงับสิทธิ — บุตรอายุเกิน ${MAX_ELIGIBLE_AGE} ปีบริบูรณ์`);
+    }
     const edu = eduHistory.find((e: any) => e.child_id === childId);
     const lvl = ((child?.education_level || edu?.education_level) as typeof EDU_LEVELS[number]) || form.education_level;
     const st = ((child?.school_type || edu?.school_type) as "government" | "private") || form.school_type;
@@ -139,6 +147,7 @@ function ReimbPage() {
 
   const save = async () => {
     if (!form.guardian_id || !form.child_id) return toast.error("กรุณาเลือกผู้มีสิทธิและบุตร");
+    if (isOverAge) return toast.error(`ระงับสิทธิ — บุตรอายุเกิน ${MAX_ELIGIBLE_AGE} ปีบริบูรณ์ ไม่สามารถบันทึกการเบิกได้`);
     if (showsProgramGroup(form.school_type, form.education_level) && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาเอกชนต้องเลือกกลุ่มสาขาวิชา");
     const remaining = Number(form.entitled_amount) - Number(form.sem1_amount) - Number(form.sem2_amount);
     if (remaining < 0) return toast.error("ยอดเบิกเกินสิทธิที่เบิกได้", { description: "ยอดคงเหลือติดลบ กรุณาตรวจสอบจำนวนเงินที่เบิก" });
@@ -327,6 +336,16 @@ function ReimbPage() {
                 <p className="text-sm text-muted-foreground">เลือกบุตรก่อนเพื่อแสดงข้อมูลสถานศึกษา</p>
               ) : (
                 <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+                  {selectedAge != null && (
+                    <div className="min-w-0 sm:col-span-2">
+                      <div className="text-xs text-muted-foreground">อายุบุตร</div>
+                      {isOverAge ? (
+                        <Badge variant="destructive">ระงับสิทธิ — อายุ {selectedAge} ปี เกิน {MAX_ELIGIBLE_AGE} ปีบริบูรณ์</Badge>
+                      ) : (
+                        <div className="font-medium">{selectedAge} ปี</div>
+                      )}
+                    </div>
+                  )}
                   <div className="min-w-0">
                     <div className="text-xs text-muted-foreground">โรงเรียนที่ศึกษา</div>
                     <div className="truncate font-medium">
@@ -477,7 +496,7 @@ function ReimbPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>ยกเลิก</Button>
-            <Button onClick={save}>บันทึก</Button>
+            <Button onClick={save} disabled={isOverAge}>บันทึก</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

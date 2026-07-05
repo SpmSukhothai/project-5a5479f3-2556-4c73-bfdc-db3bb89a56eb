@@ -29,7 +29,7 @@ export function ThaiDatePicker({
   value,
   onChange,
   placeholder = "เลือกวันที่",
-  fromYear = 1940,
+  fromYear = new Date().getFullYear() - 26,
   toYear = new Date().getFullYear(),
 }: {
   value?: string;
@@ -64,7 +64,7 @@ export function ThaiDatePicker({
           captionLayout="dropdown"
           startMonth={new Date(fromYear, 0)}
           endMonth={new Date(toYear, 11)}
-          defaultMonth={selected ?? new Date(toYear - 7, 0)}
+          defaultMonth={selected ?? new Date()}
           selected={selected}
           onSelect={(d) => {
             if (d) {

@@ -1,3 +1,20 @@
+// อายุสูงสุดที่มีสิทธิเบิก (25 ปีบริบูรณ์)
+export const MAX_ELIGIBLE_AGE = 25;
+
+// คำนวณอายุเป็นปีเต็มจากวันเกิด (ISO yyyy-mm-dd); คืน null หากไม่มีวันเกิด
+export function calcAge(birthDate?: string | null): number | null {
+  if (!birthDate) return null;
+  const d = new Date(birthDate);
+  if (isNaN(d.getTime())) return null;
+  return Math.floor((Date.now() - d.getTime()) / (365.25 * 24 * 3600 * 1000));
+}
+
+// เกินสิทธิเมื่ออายุ (ปีเต็ม) มากกว่า 25 ปีบริบูรณ์
+export function isOverEligibleAge(birthDate?: string | null): boolean {
+  const age = calcAge(birthDate);
+  return age != null && age > MAX_ELIGIBLE_AGE;
+}
+
 export const EDU_LEVEL_LABEL: Record<string, string> = {
   kindergarten: "อนุบาล",
   primary: "ประถมศึกษา",

@@ -11,7 +11,7 @@ import { Pencil, Trash2, Plus, Search, History } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatThaiDate, EDU_LEVELS, EDU_LEVEL_LABEL, SCHOOL_TYPE_LABEL, SUBSIDY_TYPE_LABEL, PRIVATE_SUBSIDY_TYPES, showsSubsidy, showsProgramGroup, programGroupsForLevel } from "@/lib/labels";
+import { formatThaiDate, EDU_LEVELS, EDU_LEVEL_LABEL, SCHOOL_TYPE_LABEL, SUBSIDY_TYPE_LABEL, PRIVATE_SUBSIDY_TYPES, showsSubsidy, showsProgramGroup, programGroupsForLevel, calcAge, isOverEligibleAge, MAX_ELIGIBLE_AGE } from "@/lib/labels";
 import { ThaiDatePicker } from "@/components/ThaiDatePicker";
 
 export const Route = createFileRoute("/_authenticated/children")({ component: ChildrenPage });
@@ -54,6 +54,7 @@ function ChildrenPage() {
 
   const save = async () => {
     if (!form.guardian_id) return toast.error("กรุณาเลือกผู้มีสิทธิ");
+    if (isOverEligibleAge(form.birth_date)) return toast.error(`อายุเกิน ${MAX_ELIGIBLE_AGE} ปีบริบูรณ์ — ไม่มีสิทธิเบิก`);
     const needsGroup = showsProgramGroup(form.school_type, form.education_level);
     if (needsGroup && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาเอกชนต้องเลือกกลุ่มสาขาวิชา");
     const { guardians, ...rest } = form;
@@ -89,7 +90,9 @@ function ChildrenPage() {
     qc.invalidateQueries({ queryKey: ["children"] });
   };
 
-  const age = (d: string) => Math.floor((Date.now() - new Date(d).getTime()) / (365.25 * 24 * 3600 * 1000));
+  const age = (d: string) => calcAge(d) ?? 0;
+  const formAge = calcAge(form.birth_date);
+  const formOverAge = isOverEligibleAge(form.birth_date);
 
   return (
     <div className="space-y-4">
@@ -164,7 +167,15 @@ function ChildrenPage() {
               </select>
             </div>
             <div><Label>ชื่อบุตร *</Label><Input value={form.child_name} onChange={(e) => setForm({ ...form, child_name: e.target.value })} /></div>
-            <div><Label>วันเดือนปีเกิด *</Label><ThaiDatePicker value={form.birth_date} onChange={(v) => setForm({ ...form, birth_date: v })} placeholder="เลือกวันเกิด" /></div>
+            <div>
+              <Label>วันเดือนปีเกิด *</Label>
+              <ThaiDatePicker value={form.birth_date} onChange={(v) => setForm({ ...form, birth_date: v })} placeholder="เลือกวันเกิด" />
+              {formAge != null && (
+                formOverAge
+                  ? <p className="mt-1 text-sm font-medium text-destructive">อายุ {formAge} ปี — เกิน {MAX_ELIGIBLE_AGE} ปีบริบูรณ์ ไม่มีสิทธิเบิก</p>
+                  : <p className="mt-1 text-sm text-muted-foreground">อายุ {formAge} ปี</p>
+              )}
+            </div>
             <div><Label>สถานศึกษา/มหาวิทยาลัยที่บุตรกำลังศึกษา</Label><Input placeholder="เช่น มหาวิทยาลัยเชียงใหม่ / โรงเรียนสุโขทัยวิทยาคม" value={form.study_place} onChange={(e) => setForm({ ...form, study_place: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -205,7 +216,7 @@ function ChildrenPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>ยกเลิก</Button>
-            <Button onClick={save}>บันทึก</Button>
+            <Button onClick={save} disabled={formOverAge}>บันทึก</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
