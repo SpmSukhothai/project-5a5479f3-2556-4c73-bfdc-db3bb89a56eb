@@ -94,13 +94,22 @@ function ReimbPage() {
       academic_year: f.academic_year,
     });
     const paid = Number(f.sem1_amount || 0) + Number(f.sem2_amount || 0);
+    // ปวส./ปริญญาตรี เอกชน: สิทธิ = เพดานต่อปี (max_amount) ตรง ๆ ผู้ใช้กรอกครึ่งหนึ่งเอง
+    const capOnly =
+      f.school_type === "private" &&
+      (f.education_level === "higher_vocational" || f.education_level === "bachelor");
     return {
       ...f,
       reimbursement_type: rate?.reimbursement_type ?? f.reimbursement_type,
       reimbursement_percent: rate?.reimbursement_percent ?? null,
-      entitled_amount: rate ? computeEntitled(rate, paid) : f.entitled_amount,
+      entitled_amount: rate ? (capOnly ? Number(rate.max_amount ?? 0) : computeEntitled(rate, paid)) : f.entitled_amount,
     };
   };
+
+  // ปวส./ปริญญาตรี เอกชน = เบิกครึ่งหนึ่งของจ่ายจริง แต่ไม่เกินเพดานต่อปี
+  const isCapOnlyLevel =
+    form.school_type === "private" &&
+    (form.education_level === "higher_vocational" || form.education_level === "bachelor");
 
   // ปรับ subsidy_type / program_group_id ให้สอดคล้องกับเงื่อนไข แล้วคำนวณ rate ใหม่
   const normalizeForm = (f: Form): Form => {
