@@ -167,7 +167,15 @@ function ChildrenPage() {
               </select>
             </div>
             <div><Label>ชื่อบุตร *</Label><Input value={form.child_name} onChange={(e) => setForm({ ...form, child_name: e.target.value })} /></div>
-            <div><Label>วันเดือนปีเกิด *</Label><ThaiDatePicker value={form.birth_date} onChange={(v) => setForm({ ...form, birth_date: v })} placeholder="เลือกวันเกิด" /></div>
+            <div>
+              <Label>วันเดือนปีเกิด *</Label>
+              <ThaiDatePicker value={form.birth_date} onChange={(v) => setForm({ ...form, birth_date: v })} placeholder="เลือกวันเกิด" />
+              {formAge != null && (
+                formOverAge
+                  ? <p className="mt-1 text-sm font-medium text-destructive">อายุ {formAge} ปี — เกิน {MAX_ELIGIBLE_AGE} ปีบริบูรณ์ ไม่มีสิทธิเบิก</p>
+                  : <p className="mt-1 text-sm text-muted-foreground">อายุ {formAge} ปี</p>
+              )}
+            </div>
             <div><Label>สถานศึกษา/มหาวิทยาลัยที่บุตรกำลังศึกษา</Label><Input placeholder="เช่น มหาวิทยาลัยเชียงใหม่ / โรงเรียนสุโขทัยวิทยาคม" value={form.study_place} onChange={(e) => setForm({ ...form, study_place: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-3">
               <div>
