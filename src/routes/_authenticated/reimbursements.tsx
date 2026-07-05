@@ -336,7 +336,16 @@ function ReimbPage() {
                 <p className="text-sm text-muted-foreground">เลือกบุตรก่อนเพื่อแสดงข้อมูลสถานศึกษา</p>
               ) : (
                 <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-                  <div className="min-w-0">
+                  {selectedAge != null && (
+                    <div className="min-w-0 sm:col-span-2">
+                      <div className="text-xs text-muted-foreground">อายุบุตร</div>
+                      {isOverAge ? (
+                        <Badge variant="destructive">ระงับสิทธิ — อายุ {selectedAge} ปี เกิน {MAX_ELIGIBLE_AGE} ปีบริบูรณ์</Badge>
+                      ) : (
+                        <div className="font-medium">{selectedAge} ปี</div>
+                      )}
+                    </div>
+                  )}
                     <div className="text-xs text-muted-foreground">โรงเรียนที่ศึกษา</div>
                     <div className="truncate font-medium">
                       {form.study_place || <span className="text-destructive">ยังไม่มีข้อมูลสถานศึกษาปัจจุบัน</span>}
