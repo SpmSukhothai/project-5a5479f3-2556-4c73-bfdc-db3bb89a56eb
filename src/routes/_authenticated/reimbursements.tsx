@@ -129,6 +129,9 @@ function ReimbPage() {
   // auto-fill study place / level / type / subsidy / program group / entitlement from the child's data
   const updateChild = (childId: string) => {
     const child = children.find((c: any) => c.id === childId);
+    if (isOverEligibleAge(child?.birth_date)) {
+      toast.error(`ระงับสิทธิ — บุตรอายุเกิน ${MAX_ELIGIBLE_AGE} ปีบริบูรณ์`);
+    }
     const edu = eduHistory.find((e: any) => e.child_id === childId);
     const lvl = ((child?.education_level || edu?.education_level) as typeof EDU_LEVELS[number]) || form.education_level;
     const st = ((child?.school_type || edu?.school_type) as "government" | "private") || form.school_type;
