@@ -366,14 +366,21 @@ function ReimbPage() {
                   รูปแบบการเบิก
                 </div>
                 <div className="font-medium">
-                  {REIMBURSEMENT_TYPE_LABEL[form.reimbursement_type] || "-"}
-                  {form.reimbursement_type !== "fixed_amount" && form.reimbursement_percent != null && <> • {form.reimbursement_percent}% ของจ่ายจริง</>}
+                  {isCapOnlyLevel ? (
+                    <>เบิกครึ่งหนึ่งของจ่ายจริง แต่ไม่เกินปีการศึกษาละ {formatTHB(form.entitled_amount)} บาท</>
+                  ) : (
+                    <>
+                      {REIMBURSEMENT_TYPE_LABEL[form.reimbursement_type] || "-"}
+                      {form.reimbursement_type !== "fixed_amount" && form.reimbursement_percent != null && <> • {form.reimbursement_percent}% ของจ่ายจริง</>}
+                    </>
+                  )}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-xs text-muted-foreground">สิทธิที่เบิกได้ (คำนวณอัตโนมัติ)</div>
+                <div className="text-xs text-muted-foreground">{isCapOnlyLevel ? "สิทธิที่เบิกได้ต่อปี (เพดาน)" : "สิทธิที่เบิกได้ (คำนวณอัตโนมัติ)"}</div>
                 <div className="text-2xl font-bold tabular-nums">{formatTHB(form.entitled_amount)} <span className="text-sm font-normal text-muted-foreground">บาท</span></div>
               </div>
+
             </Card>
 
             {/* ภาคเรียน 1 / 2 */}
