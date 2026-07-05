@@ -216,7 +216,7 @@ function ChildrenPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>ยกเลิก</Button>
-            <Button onClick={save}>บันทึก</Button>
+            <Button onClick={save} disabled={formOverAge}>บันทึก</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
