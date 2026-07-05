@@ -29,7 +29,7 @@ export function ThaiDatePicker({
   value,
   onChange,
   placeholder = "เลือกวันที่",
-  fromYear = 1940,
+  fromYear = new Date().getFullYear() - 26,
   toYear = new Date().getFullYear(),
 }: {
   value?: string;
