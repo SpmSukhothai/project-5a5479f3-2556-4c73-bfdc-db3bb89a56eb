@@ -90,7 +90,9 @@ function ChildrenPage() {
     qc.invalidateQueries({ queryKey: ["children"] });
   };
 
-  const age = (d: string) => Math.floor((Date.now() - new Date(d).getTime()) / (365.25 * 24 * 3600 * 1000));
+  const age = (d: string) => calcAge(d) ?? 0;
+  const formAge = calcAge(form.birth_date);
+  const formOverAge = isOverEligibleAge(form.birth_date);
 
   return (
     <div className="space-y-4">
