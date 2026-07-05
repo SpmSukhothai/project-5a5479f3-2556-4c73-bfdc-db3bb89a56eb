@@ -147,6 +147,7 @@ function ReimbPage() {
 
   const save = async () => {
     if (!form.guardian_id || !form.child_id) return toast.error("กรุณาเลือกผู้มีสิทธิและบุตร");
+    if (isOverAge) return toast.error(`ระงับสิทธิ — บุตรอายุเกิน ${MAX_ELIGIBLE_AGE} ปีบริบูรณ์ ไม่สามารถบันทึกการเบิกได้`);
     if (showsProgramGroup(form.school_type, form.education_level) && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาเอกชนต้องเลือกกลุ่มสาขาวิชา");
     const remaining = Number(form.entitled_amount) - Number(form.sem1_amount) - Number(form.sem2_amount);
     if (remaining < 0) return toast.error("ยอดเบิกเกินสิทธิที่เบิกได้", { description: "ยอดคงเหลือติดลบ กรุณาตรวจสอบจำนวนเงินที่เบิก" });
