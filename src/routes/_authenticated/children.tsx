@@ -54,6 +54,7 @@ function ChildrenPage() {
 
   const save = async () => {
     if (!form.guardian_id) return toast.error("กรุณาเลือกผู้มีสิทธิ");
+    if (isOverEligibleAge(form.birth_date)) return toast.error(`อายุเกิน ${MAX_ELIGIBLE_AGE} ปีบริบูรณ์ — ไม่มีสิทธิเบิก`);
     const needsGroup = showsProgramGroup(form.school_type, form.education_level);
     if (needsGroup && !form.program_group_id) return toast.error("ระดับอาชีวศึกษาเอกชนต้องเลือกกลุ่มสาขาวิชา");
     const { guardians, ...rest } = form;
