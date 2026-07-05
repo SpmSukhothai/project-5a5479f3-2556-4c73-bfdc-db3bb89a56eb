@@ -94,13 +94,22 @@ function ReimbPage() {
       academic_year: f.academic_year,
     });
     const paid = Number(f.sem1_amount || 0) + Number(f.sem2_amount || 0);
+    // ปวส./ปริญญาตรี เอกชน: สิทธิ = เพดานต่อปี (max_amount) ตรง ๆ ผู้ใช้กรอกครึ่งหนึ่งเอง
+    const capOnly =
+      f.school_type === "private" &&
+      (f.education_level === "higher_vocational" || f.education_level === "bachelor");
     return {
       ...f,
       reimbursement_type: rate?.reimbursement_type ?? f.reimbursement_type,
       reimbursement_percent: rate?.reimbursement_percent ?? null,
-      entitled_amount: rate ? computeEntitled(rate, paid) : f.entitled_amount,
+      entitled_amount: rate ? (capOnly ? Number(rate.max_amount ?? 0) : computeEntitled(rate, paid)) : f.entitled_amount,
     };
   };
+
+  // ปวส./ปริญญาตรี เอกชน = เบิกครึ่งหนึ่งของจ่ายจริง แต่ไม่เกินเพดานต่อปี
+  const isCapOnlyLevel =
+    form.school_type === "private" &&
+    (form.education_level === "higher_vocational" || form.education_level === "bachelor");
 
   // ปรับ subsidy_type / program_group_id ให้สอดคล้องกับเงื่อนไข แล้วคำนวณ rate ใหม่
   const normalizeForm = (f: Form): Form => {
@@ -357,14 +366,21 @@ function ReimbPage() {
                   รูปแบบการเบิก
                 </div>
                 <div className="font-medium">
-                  {REIMBURSEMENT_TYPE_LABEL[form.reimbursement_type] || "-"}
-                  {form.reimbursement_type !== "fixed_amount" && form.reimbursement_percent != null && <> • {form.reimbursement_percent}% ของจ่ายจริง</>}
+                  {isCapOnlyLevel ? (
+                    <>เบิกครึ่งหนึ่งของจ่ายจริง แต่ไม่เกินปีการศึกษาละ {formatTHB(form.entitled_amount)} บาท</>
+                  ) : (
+                    <>
+                      {REIMBURSEMENT_TYPE_LABEL[form.reimbursement_type] || "-"}
+                      {form.reimbursement_type !== "fixed_amount" && form.reimbursement_percent != null && <> • {form.reimbursement_percent}% ของจ่ายจริง</>}
+                    </>
+                  )}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-xs text-muted-foreground">สิทธิที่เบิกได้ (คำนวณอัตโนมัติ)</div>
+                <div className="text-xs text-muted-foreground">{isCapOnlyLevel ? "สิทธิที่เบิกได้ต่อปี (เพดาน)" : "สิทธิที่เบิกได้ (คำนวณอัตโนมัติ)"}</div>
                 <div className="text-2xl font-bold tabular-nums">{formatTHB(form.entitled_amount)} <span className="text-sm font-normal text-muted-foreground">บาท</span></div>
               </div>
+
             </Card>
 
             {/* ภาคเรียน 1 / 2 */}
