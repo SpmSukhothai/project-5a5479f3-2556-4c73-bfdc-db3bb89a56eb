@@ -111,6 +111,11 @@ function ReimbPage() {
     form.school_type === "private" &&
     (form.education_level === "higher_vocational" || form.education_level === "bachelor");
 
+  // ระงับสิทธิเมื่อบุตรที่เลือกอายุเกิน 25 ปีบริบูรณ์
+  const selectedChild = children.find((c: any) => c.id === form.child_id);
+  const selectedAge = calcAge(selectedChild?.birth_date);
+  const isOverAge = isOverEligibleAge(selectedChild?.birth_date);
+
   // ปรับ subsidy_type / program_group_id ให้สอดคล้องกับเงื่อนไข แล้วคำนวณ rate ใหม่
   const normalizeForm = (f: Form): Form => {
     const visible = showsSubsidy(f.school_type, f.education_level);
