@@ -346,6 +346,7 @@ function ReimbPage() {
                       )}
                     </div>
                   )}
+                  <div className="min-w-0">
                     <div className="text-xs text-muted-foreground">โรงเรียนที่ศึกษา</div>
                     <div className="truncate font-medium">
                       {form.study_place || <span className="text-destructive">ยังไม่มีข้อมูลสถานศึกษาปัจจุบัน</span>}
