@@ -496,7 +496,7 @@ function ReimbPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>ยกเลิก</Button>
-            <Button onClick={save}>บันทึก</Button>
+            <Button onClick={save} disabled={isOverAge}>บันทึก</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
