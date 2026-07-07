@@ -232,7 +232,7 @@ function ReimbPage() {
                 <th colSpan={3}>ภาคเรียนที่ 2</th>
                 <th rowSpan={2}>คงเหลือ</th>
                 <th rowSpan={2}>หมายเหตุ</th>
-                <th rowSpan={2} className="no-print">จัดการ</th>
+                <th rowSpan={2} className="no-print print:hidden">จัดการ</th>
               </tr>
               <tr>
                 <th>วันที่จ่าย</th><th>เลขเอกสาร/ใบเสร็จ</th><th>จำนวนเงิน</th>
