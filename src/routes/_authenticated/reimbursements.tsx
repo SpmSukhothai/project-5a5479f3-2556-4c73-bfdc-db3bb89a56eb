@@ -260,7 +260,7 @@ function ReimbPage() {
                     <td className="text-right">{formatTHB(r.sem2_amount)}</td>
                     <td className="text-right font-semibold">{formatTHB(rem)}</td>
                     <td>{r.remark || "-"}</td>
-                    <td className="no-print">
+                    <td className="no-print print:hidden">
                       <div className="flex gap-1">
                         <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
                         {role === "admin" && <Button size="icon" variant="ghost" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
