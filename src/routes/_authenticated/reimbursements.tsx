@@ -211,13 +211,14 @@ function ReimbPage() {
         <div>ประจำปีการศึกษา {year} • พิมพ์เมื่อ {formatThaiDate(new Date().toISOString())}</div>
       </div>
 
-      <Card className="p-4">
-        <div className="no-print mb-3 relative">
+      <Card className="p-4 print:border-0 print:p-0 print:shadow-none print:bg-white">
+        <div className="no-print print:hidden mb-3 relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="pl-9" placeholder="ค้นหาเลขทะเบียน/ชื่อผู้มีสิทธิ/ชื่อบุตร/โรงเรียน..." value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
-        <div className="overflow-x-auto">
-          <table className="gov-table min-w-[1800px] table-fixed">
+        <div className="overflow-x-auto print:overflow-visible">
+          <table className="gov-table min-w-[1800px] table-fixed print:min-w-0 print:w-full print:text-black">
+
             <thead>
               <tr>
                 <th rowSpan={2}>เลขทะเบียน</th>
