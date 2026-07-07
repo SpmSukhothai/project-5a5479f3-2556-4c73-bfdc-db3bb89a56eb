@@ -281,7 +281,8 @@ function ReimbPage() {
                   <td colSpan={2}></td>
                   <td className="text-right">{formatTHB(filtered.reduce((s, r: any) => s + Number(r.sem2_amount), 0))}</td>
                   <td className="text-right">{formatTHB(totals.remaining)}</td>
-                  <td colSpan={2}></td>
+                  <td></td>
+                  <td className="no-print print:hidden"></td>
                 </tr>
               </tfoot>
             )}
