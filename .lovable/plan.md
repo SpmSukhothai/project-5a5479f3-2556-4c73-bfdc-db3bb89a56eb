@@ -1,30 +1,49 @@
-# ปรับสไตล์การพิมพ์ (Print Preview) หน้า /reimbursements ให้เป็นเอกสารทางการ
+## เป้าหมาย
 
-หน้าที่เกี่ยวข้อง: `src/routes/_authenticated/reimbursements.tsx` (ตารางทะเบียนคุมการเบิก) และไฟล์สไตล์กลาง `src/styles.css`
+เตรียมชุดไฟล์ SQL ที่นำไปวางรันบน **Supabase project ภายนอก** (ของคุณเอง) ได้ทันที เพื่อสร้างฐานข้อมูลเหมือนระบบปัจจุบัน ครบทั้งโครงสร้าง ระบบสมัคร/ล็อกอินตามสิทธิ (admin/finance) และข้อมูลจริงทั้งหมด พร้อมคู่มือการเชื่อมต่อแอป
 
-## 1. พื้นหลังขาวล้วนตอนพิมพ์
-- ที่ container หลัก (`<div className="space-y-4">`) และ `<Card>` เพิ่มคลาส `print:bg-white print:shadow-none print:border-0 print:p-0`
-- ใน `src/styles.css` (@media print) กำหนด `body { background:white !important; }` (มีอยู่แล้ว — คงไว้/ยืนยัน) และเพิ่มให้ทุกกล่องพื้นหลังเทา (`.bg-muted`, card) โปร่งใสตอนพิมพ์
+> ระบบนี้ทำงานบน Lovable Cloud อยู่ ไฟล์ที่สร้างจะเป็น **ไฟล์สำหรับส่งออก** ไปรันเองบน Supabase ภายนอก ไม่แตะฐานข้อมูลปัจจุบัน
 
-## 2. ข้อความและเส้นตารางเป็นสีดำ
-- ที่ `<table className="gov-table ...">` เพิ่ม `print:text-black`
-- ใน `src/styles.css` (@media print) ปรับ `.gov-table th, .gov-table td { border-color:#000 !important; color:#000 !important; }` และหัวตาราง (`thead th`) พื้นหลังโปร่งใส/ขาว ตัวอักษรดำ เพื่อความคมชัด (ปัจจุบันหัวตารางใช้สี primary ผสม — จะเปลี่ยนเป็นขาว/ดำเฉพาะตอนพิมพ์)
-- แถวสลับสี (`nth-child(even)`) ยกเลิกพื้นหลังตอนพิมพ์เพื่อให้เป็นขาว-ดำสะอาด
+## ไฟล์ที่จะสร้าง (โฟลเดอร์ `supabase/external-export/`)
 
-## 3. ซ่อนปุ่มและ UI ที่ไม่ใช่เนื้อหาเอกสาร
-- องค์ประกอบเหล่านี้ใช้ `no-print`/`print:hidden` อยู่แล้ว จะตรวจสอบให้ครบ: หัวเรื่องพร้อมปุ่ม "พิมพ์"/"เพิ่มรายการเบิก"/ช่องปี, ช่องค้นหา, คอลัมน์ "จัดการ" (th + td), แถบเมนูด้านข้าง/header/footer ใน `AppShell`
-- เพิ่ม `print:hidden` ควบคู่ `no-print` ในจุดที่ยังไม่มี เพื่อให้แน่ใจว่าซ่อนแน่นอน
+```text
+supabase/external-export/
+  01_schema.sql       โครงสร้าง + สิทธิ + Auth ทั้งหมด
+  02_seed_data.sql    ข้อมูลจริงทุกตาราง
+  README.md           คู่มือติดตั้ง + เชื่อมต่อแอป
+```
 
-## 4. ขนาดหน้าและระยะขอบ (แนวนอน)
-- ใน `src/styles.css` คง/ยืนยัน `@page { size: A4 landscape; margin: 10mm; }` เพื่อให้ตารางกว้าง (min-w 1800px) แสดงครบในแนวนอน
-- ตอนพิมพ์ยกเลิก `overflow-x-auto` และ `min-w-[1800px]` ให้ตารางย่อพอดีหน้ากระดาษ: เพิ่ม `print:min-w-0 print:overflow-visible` และลดขนาดฟอนต์ตารางตอนพิมพ์ (`@media print .gov-table { font-size: 0.72rem; }`) ให้ทุกคอลัมน์ลงในหน้าเดียว
-- เพิ่ม `print:break-inside-avoid` ที่แถวเพื่อกันแถวขาดกลางหน้า
+### 1. `01_schema.sql` — โครงสร้าง สิทธิ และ Auth
+รวมทุกอย่างจาก migration ทั้ง 12 ไฟล์เป็นไฟล์เดียว เรียงลำดับถูกต้อง:
+- **Enums**: `app_role` (admin/finance), `school_type`, `education_level` (รวมค่าที่เพิ่มภายหลัง เช่น ปวช./ปวส.)
+- **11 ตาราง**: profiles, user_roles, schools, guardians, children, program_groups, child_education_history, guardian_affiliation_history, reimbursement_rates, reimbursements, audit_log
+- **ฟังก์ชัน**: has_role, is_staff, handle_new_user, check_child_limit, set_registration_no, set_updated_at, close_prev_education, close_prev_affiliation, validate_program_group, write_audit_log
+- **Triggers**: รวม `on_auth_user_created` บน `auth.users` (ผู้สมัครคนแรก = admin อัตโนมัติ, คนถัดไป = finance)
+- **RLS + GRANT ครบทุกตาราง** — ระบบสิทธิ admin/finance ทำงานเหมือนเดิม
+- Seed ค่าเริ่มต้นเชิงโครงสร้าง (program_groups, reimbursement_rates) ถ้าถือเป็นค่าตั้งต้นของระบบ
 
-## 5. ปรับตาราง "แถวรวมทั้งสิ้น" และให้จบที่คอลัมน์ "หมายเหตุ"
-- เนื่องจากคอลัมน์ "จัดการ" ถูกซ่อนตอนพิมพ์ ตารางที่พิมพ์จะจบที่คอลัมน์ "หมายเหตุ" อยู่แล้ว — จะแก้ colSpan ของแถวสรุปใน `<tfoot>` ให้ตรงกับจำนวนคอลัมน์ที่พิมพ์จริง (เซลล์สุดท้ายปัจจุบัน `colSpan={2}` ครอบทั้งหมายเหตุ+จัดการ จะทำให้เหลื่อมตอนซ่อนจัดการ)
-- แนวทาง: แยกเซลล์สุดท้ายของ `<tfoot>` เป็น `หมายเหตุ` (1 คอลัมน์, ว่าง) + `จัดการ` (1 คอลัมน์ ใส่ `no-print`) เพื่อให้แถว "รวมทั้งสิ้น" ปิดพอดีที่คอลัมน์หมายเหตุตอนพิมพ์
-- เน้นแถว "รวมทั้งสิ้น" ให้ชัด: `print:font-bold` และเส้นบนหนา (`border-top:2px solid #000`)
+### 2. `02_seed_data.sql` — ข้อมูลจริง
+สร้างจากข้อมูลจริงในฐานข้อมูลปัจจุบัน (ดึงด้วย query แล้วแปลงเป็น `INSERT`):
+- schools (27), guardians (3), children (5), program_groups (10)
+- child_education_history (6), guardian_affiliation_history (1)
+- reimbursement_rates (33), reimbursements (4)
+- ใส่ `ON CONFLICT DO NOTHING` เพื่อรันซ้ำได้ปลอดภัย
 
-## หมายเหตุทางเทคนิค
-- เป็นการปรับ frontend/CSS เท่านั้น ไม่มีการแตะฐานข้อมูล/RLS/ตรรกะการคำนวณ
-- ใช้ Tailwind v4 `print:` variant ในคอมโพเนนต์ + เสริม rule ใน `@media print` ของ `src/styles.css` สำหรับสิ่งที่ต้องใช้ `!important` ทับ token สีเดิม (หัวตาราง/แถวสลับสี)
+**ข้อจำกัดเรื่องผู้ใช้ (สำคัญ):** ตาราง `profiles` / `user_roles` และคอลัมน์ `reimbursements.created_by` ผูกกับ `auth.users` ซึ่ง**ส่งออกด้วย SQL ไม่ได้** (รหัสผ่านถูกเข้ารหัส และ user id จะไม่ตรงกันข้ามโปรเจกต์) วิธีจัดการ:
+- ไม่ seed `profiles`/`user_roles` — ให้ผู้ใช้ **สมัครใหม่** บน Supabase ภายนอก โดยคนแรกจะได้สิทธิ admin อัตโนมัติผ่าน trigger
+- `reimbursements.created_by` จะตั้งเป็น `NULL` ในไฟล์ seed (ข้อมูลการเบิกยังครบทุกอย่าง)
+- README อธิบายวิธีให้ admin ปรับสิทธิ finance ให้ผู้ใช้อื่นภายหลัง
+
+### 3. `README.md` — คู่มือ
+- ขั้นตอนสร้าง Supabase project ใหม่ → เปิด SQL Editor → รัน `01_schema.sql` แล้ว `02_seed_data.sql`
+- เปิด Email auth และ (ถ้าต้องการ) Google provider
+- ค่าที่ต้องนำมาเปลี่ยนในแอป: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (anon key), `VITE_SUPABASE_PROJECT_ID` และฝั่ง server `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+- หมายเหตุ: บน Lovable Cloud ไฟล์ `.env` ถูกจัดการอัตโนมัติและอาจถูกเขียนทับ การชี้ไป Supabase ภายนอกจริง ๆ แนะนำทำตอน self-host / deploy นอก Lovable
+
+## สิ่งที่ไม่แตะ
+- ไม่แก้ฐานข้อมูล/แอปปัจจุบัน — สร้างเฉพาะไฟล์ส่งออก
+- ไม่แตะ `src/integrations/supabase/*` (auto-generated)
+
+## รายละเอียดเชิงเทคนิค
+- ไฟล์ seed สร้างโดย query ข้อมูลจริงผ่าน psql แล้ว generate `INSERT` (จัดการ escape ภาษาไทย/quote ให้ถูกต้อง)
+- ทุกคำสั่งเขียนให้ **idempotent** เท่าที่ทำได้ (`CREATE ... IF NOT EXISTS`, `ON CONFLICT DO NOTHING`, `DO $$ ... $$` สำหรับ enum) เพื่อรันซ้ำไม่พัง
