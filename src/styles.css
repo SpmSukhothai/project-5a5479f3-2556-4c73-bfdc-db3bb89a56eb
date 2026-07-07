@@ -167,10 +167,27 @@
 
 /* Print styles */
 @media print {
-  @page { size: A4 landscape; margin: 12mm; }
-  body { background: white !important; color: black !important; }
+  @page { size: A4 landscape; margin: 10mm; }
+  html, body { background: white !important; color: #000 !important; }
   .no-print { display: none !important; }
   .print-only { display: block !important; }
-  .gov-table th, .gov-table td { border-color: #000 !important; }
+
+  /* Clean black-and-white official table */
+  .gov-table { font-size: 0.72rem !important; }
+  .gov-table th, .gov-table td {
+    border-color: #000 !important;
+    color: #000 !important;
+    background: white !important;
+  }
+  .gov-table thead th {
+    background: white !important;
+    color: #000 !important;
+  }
+  .gov-table tbody tr:nth-child(even) td {
+    background: white !important;
+  }
+  .gov-table tbody tr, .gov-table tfoot tr { break-inside: avoid; }
+  .gov-table tfoot tr { border-top: 2px solid #000 !important; font-weight: 700 !important; }
+  .gov-table tfoot td { border-top: 2px solid #000 !important; }
 }
 .print-only { display: none; }
