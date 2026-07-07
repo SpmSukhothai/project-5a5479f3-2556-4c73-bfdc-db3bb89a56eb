@@ -191,7 +191,8 @@ function ReimbPage() {
   }, { entitled: 0, used: 0, remaining: 0 });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 print:space-y-2 print:bg-white">
+
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">ทะเบียนคุมการเบิกเงินค่าการศึกษาบุตร</h1>
