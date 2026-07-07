@@ -191,7 +191,8 @@ function ReimbPage() {
   }, { entitled: 0, used: 0, remaining: 0 });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 print:space-y-2 print:bg-white">
+
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">ทะเบียนคุมการเบิกเงินค่าการศึกษาบุตร</h1>
@@ -210,13 +211,14 @@ function ReimbPage() {
         <div>ประจำปีการศึกษา {year} • พิมพ์เมื่อ {formatThaiDate(new Date().toISOString())}</div>
       </div>
 
-      <Card className="p-4">
-        <div className="no-print mb-3 relative">
+      <Card className="p-4 print:border-0 print:p-0 print:shadow-none print:bg-white">
+        <div className="no-print print:hidden mb-3 relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="pl-9" placeholder="ค้นหาเลขทะเบียน/ชื่อผู้มีสิทธิ/ชื่อบุตร/โรงเรียน..." value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
-        <div className="overflow-x-auto">
-          <table className="gov-table min-w-[1800px] table-fixed">
+        <div className="overflow-x-auto print:overflow-visible">
+          <table className="gov-table min-w-[1800px] table-fixed print:min-w-0 print:w-full print:text-black">
+
             <thead>
               <tr>
                 <th rowSpan={2}>เลขทะเบียน</th>
@@ -230,7 +232,7 @@ function ReimbPage() {
                 <th colSpan={3}>ภาคเรียนที่ 2</th>
                 <th rowSpan={2}>คงเหลือ</th>
                 <th rowSpan={2}>หมายเหตุ</th>
-                <th rowSpan={2} className="no-print">จัดการ</th>
+                <th rowSpan={2} className="no-print print:hidden">จัดการ</th>
               </tr>
               <tr>
                 <th>วันที่จ่าย</th><th>เลขเอกสาร/ใบเสร็จ</th><th>จำนวนเงิน</th>
@@ -258,7 +260,7 @@ function ReimbPage() {
                     <td className="text-right">{formatTHB(r.sem2_amount)}</td>
                     <td className="text-right font-semibold">{formatTHB(rem)}</td>
                     <td>{r.remark || "-"}</td>
-                    <td className="no-print">
+                    <td className="no-print print:hidden">
                       <div className="flex gap-1">
                         <Button size="icon" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
                         {role === "admin" && <Button size="icon" variant="ghost" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
@@ -279,7 +281,8 @@ function ReimbPage() {
                   <td colSpan={2}></td>
                   <td className="text-right">{formatTHB(filtered.reduce((s, r: any) => s + Number(r.sem2_amount), 0))}</td>
                   <td className="text-right">{formatTHB(totals.remaining)}</td>
-                  <td colSpan={2}></td>
+                  <td></td>
+                  <td className="no-print print:hidden"></td>
                 </tr>
               </tfoot>
             )}
